@@ -1,0 +1,14 @@
+*~
+*.sqlite3
+*.egg-info
+
+.ipynb_checkpoints
+.DS_Store
+
+__pycache__
+legacy
+build
+dist
+docs/_build
+
+memo.txt
