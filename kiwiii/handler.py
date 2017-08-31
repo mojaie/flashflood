@@ -4,7 +4,6 @@
 # http://opensource.org/licenses/MIT
 #
 
-import glob
 import json
 import os
 import time
@@ -20,6 +19,7 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
 from kiwiii import excelexporter
+from kiwiii import loader
 from kiwiii import screenerapi
 from kiwiii import handlerutil as hu
 from kiwiii import tablebuilder as tb
@@ -28,11 +28,6 @@ from kiwiii import tablecolumn as tc
 from kiwiii import worker as wk
 from kiwiii.sqliteconnection import Connection
 from kiwiii.util import debug
-
-
-with open(os.path.join(
-        os.path.dirname(__file__), "../server_config.yaml")) as f:
-    config = yaml.load(f.read())
 
 
 class BaseHandler(web.RequestHandler):
@@ -52,7 +47,7 @@ class SchemaHandler(BaseHandler):
             "domain": domain,
             "resources": []
         }
-        for sq in glob.glob("{}/*.sqlite3".format(config["data_dir"])):
+        for sq in loader.db_list():
             conn = Connection(sq)
             doc = conn.document()
             if doc["domain"] != domain:
@@ -70,7 +65,7 @@ class TemplatesHandler(BaseHandler):
         response = {
             "templates": []
         }
-        for tm in glob.glob("{}/*.csv".format(config["template_dir"])):
+        for tm in loader.report_tmpl_list():
             response["templates"].append({
                 "name": os.path.splitext(os.path.basename(tm))[0],
                 "sourceFile": os.path.basename(tm)
@@ -84,7 +79,7 @@ class DataSourceHandler(BaseHandler):
         filename = self.get_argument("filename")
         response = {}
         try:
-            with open(os.path.join(config["data_dir"], filename)) as f:
+            with open(filename) as f:
                 response = yaml.load(f.read())
         except FileNotFoundError:
             response["enabled"] = False
@@ -446,7 +441,7 @@ def run():
             (r"/report", ReportHandler),
             (r"/reportprev", ReportPreviewHandler),
             (r"/server", ServerStatusHandler, store),
-            (r'/(.*)', web.StaticFileHandler, {"path": config["web_home"]})
+            (r'/(.*)', web.StaticFileHandler, {"path": loader.web_home_path()})
         ],
         debug=options.debug,
         compress_response=True,

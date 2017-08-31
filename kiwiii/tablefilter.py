@@ -8,17 +8,16 @@ import functools
 import itertools
 import json
 import operator
-import os
 import pickle
 import re
 import traceback
-import yaml
 
 from chorus import mcsdr, molutil, substructure, smilessupplier, v2000reader
 from chorus.draw import calc2dcoords
 from chorus.model.graphmol import Compound
 from chorus.draw.svg import SVG
 
+from kiwiii import loader
 from kiwiii.sqliteconnection import Connection
 from kiwiii import tablecolumn as tc
 from kiwiii.util import lod
@@ -38,10 +37,6 @@ SIM = tc.SimilarityColumn()
 MCS = tc.McsSizeColumn()
 MCSDR = tc.McsdrSizeColumn()
 
-with open(os.path.join(
-        os.path.dirname(__file__), "../server_config.yaml")) as f:
-    config = yaml.load(f.read())
-
 
 def like_operator(a, b):
     """ regexp implementation of sqlite LIKE operator """
@@ -58,8 +53,7 @@ class DBSearchFilter(object):
         for trgt in self.query["targets"]:
             db, table = trgt.split(':')
             if db not in dbconns:
-                path = os.path.join(config["data_dir"],
-                                    "{}.sqlite3".format(db))
+                path = loader.db(db)
                 dbconns[db] = Connection(path)
             conn = dbconns[db]
             tbl = lod.find("entity", trgt, conn.document()["tables"])
@@ -78,8 +72,7 @@ class DBSearchFilter(object):
         for trgt in self.query["targets"]:
             db, table = trgt.split(':')
             if db not in dbconns:
-                path = os.path.join(config["data_dir"],
-                                    "{}.sqlite3".format(db))
+                path = loader.db(db)
                 dbconns[db] = Connection(path)
             conn = dbconns[db]
             search_cnt.append(conn.rows_count((table,)))
@@ -264,7 +257,7 @@ def parse_chem_query(data, fmt, source):
             raise TypeError()
     elif fmt == "dbid":
         db, tbl = source.split(":")
-        path = os.path.join(config["data_dir"], "{}.sqlite3".format(db))
+        path = loader.db(db)
         conn = Connection(path)
         res = conn.find_first("ID", (data,), (tbl,))
         if res is None:

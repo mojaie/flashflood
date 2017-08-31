@@ -7,15 +7,9 @@
 import base64
 import csv
 import functools
-import json
-import os
 import time
-import yaml
 
-
-with open(os.path.join(
-        os.path.dirname(__file__), "../server_config.yaml")) as f:
-    config = yaml.load(f.read())
+from kiwiii import loader
 
 
 class TemporaryDataStore(object):
@@ -58,8 +52,10 @@ def basic_auth(method):
     @functools.wraps(method)
     def wrapper(handler, *args, **kwargs):
         def reject(hdl):
-            hdl.set_header('WWW-Authenticate',
-                           'Basic realm={}'.format(config['basic_auth_realm']))
+            hdl.set_header(
+                'WWW-Authenticate',
+                'Basic realm={}'.format(loader.basic_auth_realm())
+            )
             hdl.set_status(401)
 
         auth = handler.request.headers.get('Authorization')
@@ -70,9 +66,8 @@ def basic_auth(method):
         auth_decoded = base64.b64decode(auth[6:]).decode('utf-8')
         user, passwd = auth_decoded.split(':')
 
-        if user in config['user']:
-            if passwd == config['user'][user]['password']:
-                return method(handler, *args, **kwargs)
+        if loader.user_passwd_matched(user, passwd):
+            return method(handler, *args, **kwargs)
         return reject(handler)
     return wrapper
 
@@ -82,7 +77,7 @@ class TemplateMatcher(object):
         self.name = name
         self.columns = []
         self.template = {}  # {id1: {id: id1, col: val1}, ...}
-        tpath = os.path.join(config["template_dir"], tmpl_file)
+        tpath = loader.report_tmpl_file(tmpl_file)
         with open(tpath, newline="") as f:
             reader = csv.reader(f)
             header = next(reader)

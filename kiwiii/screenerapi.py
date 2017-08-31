@@ -10,13 +10,11 @@ import yaml
 
 from tornado import httpclient
 
-with open(os.path.join(
-        os.path.dirname(__file__), "../server_config.yaml")) as f:
-    config = yaml.load(f.read())
+from kiwiii import loader
 
 
 def request(query, auth_header):
-    url = "{}{}".format(config["screener_api"], query)
+    url = "{}{}".format(loader.screener_api(), query)
     print("HTTP Request: {}".format(url))
     http_client = httpclient.HTTPClient()
     request = httpclient.HTTPRequest(url)

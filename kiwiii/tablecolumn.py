@@ -7,18 +7,12 @@
 import functools
 import itertools
 import json
-import os
-import yaml
 
 from chorus import molutil, wclogp
 from chorus.draw.svg import SVG
 from chorus.model.graphmol import Compound
 
 from kiwiii.util import lod
-
-with open(os.path.join(
-        os.path.dirname(__file__), "../server_config.yaml")) as f:
-    config = yaml.load(f.read())
 
 
 class MolObjectColumn(object):
