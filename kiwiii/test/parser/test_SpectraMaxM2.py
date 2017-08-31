@@ -11,7 +11,7 @@ from kiwiii.parser import SpectraMaxM2 as sm
 
 TEST_FILE = os.path.join(
     os.path.dirname(__file__),
-    "../../../resources/raw/instruments/SpectraMaxM2.txt"
+    "../../resources/raw/SpectraMaxM2.txt"
 )
 
 

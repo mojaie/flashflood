@@ -11,7 +11,7 @@ from kiwiii.parser import LightCycler480 as lc
 
 TEST_FILE = os.path.join(
     os.path.dirname(__file__),
-    "../../../resources/raw/instruments/LightCycler480.txt"
+    "../../resources/raw/LightCycler480.txt"
 )
 
 
