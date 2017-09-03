@@ -1,9 +1,20 @@
 
-Kiwiii-server Documentation
+Flashflood Documentation
 ============================
 
-Kiwiii-server is a HTTP API server library for chemical database administration and computation.
+Flashflood is a HTTP API server builder for chemical data analysis. Flashflood includes DAG workflow assistance for parallel processing of chemical structure, chemical properties, biochemical activity data. This enables to build web server which can be accessed by web application, Jupyter notebook and any other analysis platform via HTTP.
 
+
+Features
+----------
+
+- RESTful HTTP API builder
+- DAG workflow for analysis and database construction
+- Parallel computation
+- Chemical database construction with SQLite3
+- Library search (text match, chemical properties, sub/super structure)
+- Chemical space network generation (MCS-DR, RDKit fingerprint and RDKit MCS)
+- Output and reporting (JSON, Excel, SDFile and SQLite)
 
 
 Contents:

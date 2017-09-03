@@ -88,9 +88,9 @@ qthelp:
 	@echo
 	@echo "Build finished; now you can run "qcollectiongenerator" with the" \
 	      ".qhcp project file in $(BUILDDIR)/qthelp, like this:"
-	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/kiwiii.qhcp"
+	@echo "# qcollectiongenerator $(BUILDDIR)/qthelp/flashflood.qhcp"
 	@echo "To view the help file:"
-	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/kiwiii.qhc"
+	@echo "# assistant -collectionFile $(BUILDDIR)/qthelp/flashflood.qhc"
 
 applehelp:
 	$(SPHINXBUILD) -b applehelp $(ALLSPHINXOPTS) $(BUILDDIR)/applehelp

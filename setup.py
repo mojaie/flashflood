@@ -10,11 +10,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 
 setup(
-    name="Kiwiii-server",
-    version="0.7.0",
-    description="HTTP API server library for chemical database administration and computation",
+    name="Flashflood",
+    version="0.8.0",
+    description="HTTP API server builder for chemical database workflow",
     long_description=long_description,
-    url="https://github.com/mojaie/kiwiii-server",
+    url="https://github.com/mojaie/flashflood",
     author="Seiji Matsuoka",
     author_email="mojaie@aol.com",
     license="MIT",
@@ -28,8 +28,8 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6"
     ],
-    keywords="drug-discovery cheminformatics api-server",
-    packages=find_packages(exclude=["kiwiii.test*"]),
+    keywords="drug-discovery cheminformatics api-server workflow",
+    packages=find_packages(exclude=["flashflood.test*"]),
     python_requires=">=3.5",
     install_requires=[
         "chorus", "tornado", "xlsxwriter", "pandas", "python-louvain"

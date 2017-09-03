@@ -1,8 +1,8 @@
 
-kiwiii-server
+Flashflood
 ================
 
-Kiwiii is a web-based client-server application for chemical data analysis and visualization. The server implements web API which enables easy access to databases via HTTP.
+Flashflood is a HTTP API server builder for chemical data analysis. Flashflood includes DAG workflow assistance for parallel processing of chemical structure, chemical properties, biochemical activity data. This enables to build web server which can be accessed by web application, Jupyter notebook and any other analysis platform via HTTP.
 
 
 
@@ -12,7 +12,7 @@ Installation
 ### PyPI
 
 ```
-pip3 install kiwiii-server
+pip3 install flashflood
 ```
 
 
@@ -22,9 +22,9 @@ pip3 install kiwiii-server
 conda upgrade -n root conda
 conda install -n root conda-build
 
-conda skeleton pypi kiwiii-server
-conda build kiwiii-server
-conda install --use-local kiwiii-server
+conda skeleton pypi flashflood
+conda build flashflood
+conda install --use-local flashflood
 ```
 
 
@@ -32,7 +32,7 @@ conda install --use-local kiwiii-server
 API Documentation
 -------------------
 
-https://mojaie.github.io/kiwiii-server
+https://mojaie.github.io/flashflood
 
 
 
