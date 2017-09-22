@@ -18,7 +18,7 @@ def content_loader(lines):
     ro = 5  # row_offset
     pc = 24  # plate_cols
     co = 1  # col_offset
-    raw = [row for row in csv.reader(f, delimiter="\t")]
+    raw = [row for row in csv.reader(lines, delimiter="\t")]
     blocks = [raw[i*bs+bo:(i + 1)*bs+bo] for i in range(len(raw) // bs)]
     parsed = {"plates": []}
     for block in blocks:
