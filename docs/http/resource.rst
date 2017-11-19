@@ -9,22 +9,20 @@ Resource schema
             "id": "test_db",
             "name": "Test DB",
             "domain": "chemical",
-            "entity": "chemdb:library1",
-            "columns": [
+            "resourceType": "sqlite",
+            "resourceFile": "test.sqlite3",
+            "fields": [
                 {
-                    "key": "ID",
-                    "sort": "text"
+                    "key": "compound_id",
+                    "name": "ID", "valueType": "compound_id"
                 },
                 {
                     "key": "mw",
-                    "name": "Molecular weight",
-                    "sort": "numeric",
-                    "request": "job"
+                    "name": "Molecular weight", "valueType": "numeric"
                 },
                 {
-                    "key": "struct",
-                    "name": "Structure",
-                    "sort": "none"
+                    "key": "_structure",
+                    "name": "Structure", "valueType": "svg"
                 }
             ]
             "description": "This is Test DB.",
@@ -34,20 +32,19 @@ Resource schema
 
 :Resource:
     * **id**\ (*string*) - table ID for annotation (experiment ID)
-    * **domain**\ (*string*) - identifies group of dbs and site of external resources
-    * **entity**\ (*string*) - db table name(refID:layer or db:table)
     * **name**\ (*string*) - display name of the table
-    * **tags**\ (*object*) - list of annotation key
+    * **domain**\ (*string*) - data type category
+    * **resourceType**\ (*string*) - resource media category
+    * **resourceFile**\ (*string*) - resource file path
+    * **resourceURL**\ (*string*) - resource file URL
     * **description**\ (*string*) - optional description
-    * **columns**\ (*object*) - list of column
+    * **fields**\ (*object*) - list of fields
 
-:Column:
+:fields:
     * **key**\ (*string*) - column key
     * **name**\ (*string*) - display name of the column
-    * **sort**\ (*string*) - one of "numeric", "text", "none"
-    * **dataType**\ (*string*) - data type (ex. inhibition%, IC50, annotation flag, ...)
-    * **request**\ (*string*) - if "job", the value is not stored on the db and  will be calculated on the fly
-    * **tags**\ (*object*) - list of annotation key. if not specified, it will be the duplicate of table tags
+    * **valueType**\ (*string*) - value type category
+    * **sortType**\ (*string*) - sort order (numeric, text or none(unsortable))
 
 
 * :ref:`genindex`

@@ -2,5 +2,5 @@
 flashflood.sqliteconnection
 ==============================
 
-.. automodule:: sqliteconnection
+.. automodule:: flashflood.sqliteconnection
    :members:

@@ -8,3 +8,4 @@ HTTP API server implementation
 
    query.rst
    resource.rst
+   response.rst

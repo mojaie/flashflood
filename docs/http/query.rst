@@ -7,14 +7,13 @@ Query API
     {
         "type": "chemsearch",
         "targets": ["drugbankfda"],
-        "key": "id",
+        "key": "compound_id",
         "values": ["DB00189", "DB00193", "DB00203", "DB00865", "DB01143"]
     }
 
 :Attributes:
     * **type**\ (*string*) - query task type
     * **targets**\ (*object*) - list of target resource ID
-    * **targetFields**\ (*object*) - list of target resource field keys
     * **key**\ (*string*) - key
     * **values**\ (*object*) - list of values
     * **operator**\ (*string*) - query operator
