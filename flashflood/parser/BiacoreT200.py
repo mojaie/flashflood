@@ -119,3 +119,17 @@ def screen_specs():
             }]
         }]
     }
+
+
+def dose_specs():
+    """Vega plot format for SPR dose-response
+    """
+    specs = screen_specs()
+    marks = specs["marks"][0]
+    marks["from"]["facet"]["groupby"] = ["conc"]
+    marks["marks"][0]["encode"]["enter"]["stroke"]["field"] = "conc"
+    specs["scales"][1]["zero"] = False
+    specs["scales"][2]["type"] = "quantile"
+    specs["scales"][2]["range"] = {"scheme": "blues", "count": 5}
+    specs["scales"][2]["domain"]["field"] = "conc"
+    return specs
