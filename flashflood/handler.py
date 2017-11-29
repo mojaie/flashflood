@@ -209,6 +209,7 @@ class ServerStatusHandler(BaseHandler):
             "queuedTasks": self.jq.queue.qsize(),
             "instance": self.instance,
             "processors": static.PROCESSES,
+            "debugMode": options.debug,
             "rdkit": static.RDK_AVAILABLE,
             "numericModule": static.NUMERIC_MODULE,
             "calc": {

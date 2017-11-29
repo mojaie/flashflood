@@ -10,7 +10,7 @@ from flashflood.node.function.apply import Apply
 
 
 def extend(name, key, func, row):
-    new_row = {name: func(key)}
+    new_row = {name: func(row[key])}
     new_row.update(row)
     return new_row
 

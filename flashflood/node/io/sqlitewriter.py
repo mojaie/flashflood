@@ -33,12 +33,13 @@ data_type = {
 
 
 class SQLiteWriter(Node):
-    def __init__(self, wf, dest_path, create_index=None,
+    def __init__(self, wf, dest_path, primary_key=None, create_index=None,
                  allow_overwrite=True, notice_per_records=10000):
         super().__init__()
         self._in_edges = []
         self.wf = wf
         self.dest_path = dest_path
+        self.primary_key = primary_key
         self.create_index = create_index
         self.allow_overwrite = allow_overwrite
         self.notice_per_records = notice_per_records
@@ -85,8 +86,10 @@ class SQLiteWriter(Node):
                     fieldphrase = field["key"]
                     sqtype = data_type.get(field.get("valueType"), "text")
                     fieldphrase += " {}".format(sqtype)
-                    if field["key"] == "id":
-                        fieldphrase += " primary key check(id != '')"
+                    if self.primary_key is not None and \
+                            field["key"] == self.primary_key:
+                        fieldphrase += " primary key check({} != '')".format(
+                            self.primary_key)
                     if sqtype == "text":
                         fieldphrase += " collate nocase"
                     phrases.append(fieldphrase)
