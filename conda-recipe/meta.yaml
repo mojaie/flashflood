@@ -1,0 +1,29 @@
+package:
+  name: flashflood
+  version: 0.8.3
+
+source:
+  git_rev: v0.8.3
+  git_url: ../
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - chorus
+    - tornado
+    - xlsxwriter
+    - pandas
+    - python-louvain
+
+test:
+  imports:
+    - flashflood
+
+about:
+  home: https://github.com/mojaie/chorus
+  license: MIT
+  license_file: LICENSE
