@@ -18,7 +18,7 @@ class SDFParser(Workflow):
         sdf_in = SDFileLinesInput(
             contents, sdf_options=query["params"]["fields"],
             fields=[
-                {"key": q, "name": q, "valueType": "text"}
+                {"key": q, "name": q, "format": "text"}
                 for q in query["params"]["fields"]
             ])
         molecule = Molecule()

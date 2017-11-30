@@ -27,8 +27,8 @@ class Stack(SyncNode):
         if params is not None:
             self.params.update(params)
         self.fields = [
-            {"key": "_field", "name": "field", "valueType": "text"},
-            {"key": "_value", "name": "value", "valueType": "text"}
+            {"key": "_field", "name": "field", "format": "text"},
+            {"key": "_value", "name": "value", "format": "text"}
         ]
 
     def on_submitted(self):

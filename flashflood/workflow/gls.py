@@ -47,8 +47,8 @@ class GLS(Workflow):
         super().__init__()
         self.query = query
         self.fields.extend([
-            {"key": "_mcsdr", "name": "MCS-DR size", "sortType": "numeric"},
-            {"key": "_local_sim", "name": "GLS", "sortType": "numeric"}
+            {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
+            {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
         ])
         qmol = sq.query_mol(query["queryMol"])
         qmolarr = mcsdr.comparison_array(

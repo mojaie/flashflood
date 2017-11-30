@@ -19,6 +19,13 @@ from flashflood.node.io.iterator import IteratorInput
 from flashflood.node.transform.combination import Combination
 
 
+GRAPH_FIELDS = [
+    {"key": "source", "name": "source", "d3_format": "d"},
+    {"key": "target", "name": "target", "d3_format": "d"},
+    {"key": "weight", "name": "weight", "d3_format": ".2f"}
+]
+
+
 def gls_filter(params, pair):
     row1, row2 = pair
     thld = float(params["threshold"])
@@ -85,11 +92,7 @@ class GLSNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields.merge([
-            {"key": "source", "name": "source", "valueType": "numeric"},
-            {"key": "target", "name": "target", "valueType": "numeric"},
-            {"key": "weight", "name": "weight", "valueType": "numeric"}
-        ])
+        self.fields.merge(GRAPH_FIELDS)
         arrgen = functools.partial(gls_array, params)
         arrs = map(arrgen, contents["records"])
         filter_ = functools.partial(gls_filter, params)
@@ -108,11 +111,7 @@ class RDKitMorganNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields.merge([
-            {"key": "source"},
-            {"key": "target"},
-            {"key": "weight"}
-        ])
+        self.fields.merge(GRAPH_FIELDS)
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(morgan_filter, params)
         iter_in = IteratorInput(mols)
@@ -130,11 +129,7 @@ class RDKitFMCSNetwork(Workflow):
         self.datatype = "edges"
         self.nodesid = contents["id"]
         self.query = params
-        self.fields.merge([
-            {"key": "source"},
-            {"key": "target"},
-            {"key": "weight"}
-        ])
+        self.fields.merge(GRAPH_FIELDS)
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(fmcs_filter, params)
         iter_in = IteratorInput(mols)

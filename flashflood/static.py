@@ -38,22 +38,20 @@ def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
-INDEX_FIELD = {"key": "_index", "name": "index", "valueType": "count"}
+INDEX_FIELD = {"key": "_index", "name": "index", "d3_format": "d"}
 COMPID_FIELD = {"key": "compound_id", "name": "compound ID",
-                "valueType": "compound_id"}
-NAME_FIELD = {"key": "name", "name": "Name", "valueType": "text"}
-MOLOBJ_FIELD = {"key": "_molobj", "name": "Molecule object",
-                "valueType": "json"}
+                "format": "compound_id"}
+NAME_FIELD = {"key": "name", "name": "Name", "format": "text"}
+MOLOBJ_FIELD = {"key": "_molobj", "name": "Molecule object", "format": "json"}
 
 CHEM_FIELDS = ListOfDict([
     MOLOBJ_FIELD,
-    {"key": "_structure", "name": "Structure", "valueType": "svg"},
-    {"key": "_mw", "name": "MW", "valueType": "numeric"},
-    {"key": "_mw_wo_sw", "name": "MW w/o salt and water",
-     "valueType": "numeric"},
-    {"key": "_formula", "name": "Formula", "valueType": "text"},
-    {"key": "_logp", "name": "WCLogP", "valueType": "numeric"},
-    {"key": "_nonH", "name": "Non-H atom count", "valueType": "numeric"}
+    {"key": "_structure", "name": "Structure", "format": "svg"},
+    {"key": "_mw", "name": "MW", "d3_format": ".2f"},
+    {"key": "_mw_wo_sw", "name": "MW w/o salt and water", "d3_format": ".2f"},
+    {"key": "_formula", "name": "Formula", "format": "text"},
+    {"key": "_logp", "name": "WCLogP", "d3_format": ".1f"},
+    {"key": "_nonH", "name": "Non-H atom count", "d3_format": "d"}
 ])
 
 CHEM_FUNCTIONS = {

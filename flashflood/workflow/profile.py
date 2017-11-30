@@ -28,7 +28,7 @@ class Profile(Workflow):
         sq = {
             "type": "filter", "targets": target_ids,
             "key": "compound_id", "operator": "eq",
-            "values": (query["compoundID"],)
+            "values": (query["compound_id"],)
         }
         sq_filter = sqlite.SQLiteFilterInput(sq)
         """

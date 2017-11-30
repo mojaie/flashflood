@@ -40,9 +40,8 @@ class RDKitFMCS(Workflow):
         super().__init__()
         self.query = query
         self.fields.extend([
-            {"key": "_fmcs_sim", "name": "MCS size", "sortType": "numeric"},
-            {"key": "_fmcs_edges", "name": "MCS similarity",
-             "sortType": "numeric"}
+            {"key": "_fmcs_sim", "name": "MCS similarity", "d3_format": ".2f"},
+            {"key": "_fmcs_edges", "name": "MCS size", "d3_format": "d"}
         ])
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(rdfmcs_filter, qmol, query["params"])

@@ -39,7 +39,7 @@ class RDKitMorgan(Workflow):
         self.query = query
         self.fields.add({
             "key": "_morgan_sim", "name": "Fingerprint similarity",
-            "sortType": "numeric"})
+            "d3_format": ".2f"})
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(rdmorgan_filter, qmol, query["params"])
         sq_in = SQLiteInput(query)

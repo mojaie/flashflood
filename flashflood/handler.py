@@ -214,11 +214,11 @@ class ServerStatusHandler(BaseHandler):
             "numericModule": static.NUMERIC_MODULE,
             "calc": {
                 "fields": [
-                    {"key": "id", "valueType": "text"},
-                    {"key": "size", "valueType": "filesize"},
-                    {"key": "status", "valueType": "text"},
-                    {"key": "created", "valueType": "timestamp"},
-                    {"key": "expires", "valueType": "timestamp"}
+                    {"key": "id", "format": "text"},
+                    {"key": "size", "d3_format": ".3s"},
+                    {"key": "status", "format": "text"},
+                    {"key": "created", "format": "date"},
+                    {"key": "expires", "format": "date"}
                 ],
                 "records": []
             }
