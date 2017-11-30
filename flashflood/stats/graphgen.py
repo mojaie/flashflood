@@ -11,6 +11,8 @@ import networkx as nx
 import community
 
 
+# TODO: networkx2.0
+
 def graph_loader(datatable, index_label,
                  node_keys=None, edge_keys=("weight",)):
     """ load graph JSON file

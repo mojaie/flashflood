@@ -13,6 +13,7 @@ import community
 
 from flashflood.stats import graphgen
 
+#TODO: networkx2.0
 
 def graph_stats(G, part_label="partition"):
     """ Calculate network and clustering properties

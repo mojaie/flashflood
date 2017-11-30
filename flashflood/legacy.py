@@ -3,6 +3,7 @@
 # Licensed under the MIT License (MIT)
 # http://opensource.org/licenses/MIT
 #
+"""Legacy: These functionalities will never be used"""
 
 import functools
 import multiprocessing as mp
