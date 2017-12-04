@@ -8,10 +8,29 @@ import time
 import unittest
 
 from flashflood.core.jobqueue import JobQueue
-from flashflood.core.task import Task, IdleTask
+from flashflood.core.task import Task
 
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
+
+
+class IdleTask(Task):
+    """For async task test"""
+    @gen.coroutine
+    def run(self):
+        self.on_start()
+        while 1:
+            if self.status == "interrupted":
+                self.on_aborted()
+                return
+            yield gen.sleep(0.2)
+        self.on_finish()
+
+    @gen.coroutine
+    def interrupt(self):
+        self.status = "interrupted"
+        while self.status != "aborted":
+            yield gen.sleep(0.2)
 
 
 class TestJobQueue(AsyncTestCase):

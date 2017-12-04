@@ -33,9 +33,7 @@ class Workflow(Task):
 
     @gen.coroutine
     def run(self):
-        print("start")
         self.on_start()
-        print(self.start_time)
         for node_id in self.order:
             self.nodes[node_id].run()
         while any(n.status == "running" for n in self.nodes):
@@ -84,41 +82,3 @@ class Workflow(Task):
                 self.nodes[down].add_in_edge(
                     self.nodes[up].out_edge(uport), dport)
             self.nodes[up].on_submitted()
-
-    def output(self):
-        # TODO:
-        data = {
-            "id": self.id,
-            "name": self.id[:8],
-            "dataType": self.datatype,
-            "schemaVersion": static.SCHEMA_VERSION,
-            "revision": 0,
-            "created": time.strftime("%X %x %Z",
-                                     time.localtime(self.creation_time)),
-            "status": self.status
-        }
-        if self.start_time is not None:
-            data["execTime"] = round(time.time() - self.start_time, 1)
-        if hasattr(self, "query"):
-            data["query"] = self.query
-        if hasattr(self, "fields"):
-            data["fields"] = self.fields
-        if hasattr(self, "result_records"):
-            data["records"] = self.result_records
-        if hasattr(self, "result_count"):
-            data["resultCount"] = self.result_count
-        if hasattr(self, "task_count") and hasattr(self, "done_count"):
-            data["taskCount"] = self.task_count
-            data["doneCount"] = self.done_count
-            try:
-                p = round(self.done_count / self.task_count * 100, 1)
-            except ZeroDivisionError:
-                p = None
-            # TODO: mpfilter should send doneCount every time the row processed
-            if self.status == "done":
-                data["progress"] = 100
-            else:
-                data["progress"] = p
-        if hasattr(self, "nodesid"):
-            data["nodesID"] = self.nodesid
-        return data

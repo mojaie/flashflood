@@ -8,11 +8,21 @@ import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
-from flashflood.core.task import MPWorkerResults
+from flashflood.core.task import MPWorker
 
 
 def twice(dict_):
     return {"value": dict_["value"] * 2}
+
+
+class MPWorkerResults(MPWorker):
+    """For mpworker test"""
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.results = []
+
+    def on_task_done(self, res):
+        self.results.append(res)
 
 
 class TestTask(AsyncTestCase):

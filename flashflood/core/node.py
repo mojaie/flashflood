@@ -36,8 +36,8 @@ class Node(Task):
 
     def on_submitted(self):
         # self._out_edge.task_count = self._in_edge.task_count
-        # self._out_edge.fields.merge(self._in_edge.fields)
-        # self._out_edge.fields.merge(self.fields)
+        self._out_edge.fields.merge(self._in_edge.fields)
+        self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self._in_edge.params)
         self._out_edge.params.update(self.params)
 
@@ -91,17 +91,6 @@ class AsyncNode(Node):
             yield gen.sleep(self.interval)
 
 
-class LazyNode(AsyncNode):
-    """For async node test"""
-    @gen.coroutine
-    def _get_loop(self):
-        while 1:
-            in_ = yield self._in_edge.get()
-            yield gen.sleep(0.01)
-            yield self._out_edge.put(in_)
-            # self._out_edge.done_count = self._in_edge.done_count
-
-
 class Synchronizer(Node):
     def __init__(self, params=None):
         super().__init__(params)
@@ -130,27 +119,6 @@ class Synchronizer(Node):
             yield gen.sleep(self.interval)
 
 
-class LazyConsumer(Synchronizer):
-    """For async node test"""
-    def __init__(self, params=None):
-        super().__init__(params)
-        self.task_count = 0
-        self.done_count = 0
-        self.records = []
-
-    @gen.coroutine
-    def _get_loop(self):
-        while 1:
-            in_ = yield self._in_edge.get()
-            self.records.append(in_)
-            # self.done_count = self._in_edge.done_count
-            yield gen.sleep(0.01)
-
-    def on_submitted(self):
-        pass
-        # self.task_count = self._in_edge.task_count
-
-
 class Asynchronizer(Node):
     def __init__(self, params=None):
         super().__init__(params)
@@ -174,22 +142,3 @@ class Asynchronizer(Node):
         self.status = "interrupted"
         yield self._out_edge.aborted()
         self.on_aborted()
-
-
-class EagerProducer(Asynchronizer):
-    def __init__(self, params=None):
-        super().__init__(params)
-        self._out_edge = AsyncQueueEdge()
-        self.task_count = 1000
-
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        for i in range(self.task_count):
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            yield self._out_edge.put(i)
-            self._out_edge.done_count += 1
-        yield self._out_edge.done()
-        self.on_finish()

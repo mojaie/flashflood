@@ -84,25 +84,6 @@ class Task(object):
         return self.finish_time
 
 
-class IdleTask(Task):
-    """For async task test"""
-    @gen.coroutine
-    def run(self):
-        self.on_start()
-        while 1:
-            if self.status == "interrupted":
-                self.on_aborted()
-                return
-            yield gen.sleep(0.2)
-        self.on_finish()
-
-    @gen.coroutine
-    def interrupt(self):
-        self.status = "interrupted"
-        while self.status != "aborted":
-            yield gen.sleep(0.2)
-
-
 class MPWorker(Task):
     """General-purpose multiprocess worker
     Args:
@@ -146,13 +127,3 @@ class MPWorker(Task):
         self.status = "interrupted"
         while self.status != "aborted":
             yield gen.sleep(self.interval)
-
-
-class MPWorkerResults(MPWorker):
-    """For mpworker test"""
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.results = []
-
-    def on_task_done(self, res):
-        self.results.append(res)
