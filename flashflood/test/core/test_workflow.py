@@ -11,7 +11,7 @@ from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.node import Asynchronizer
 from flashflood.core.container import Container
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 from flashflood.node.writer.container import (
     ContainerWriter, AsyncContainerWriter)
 from flashflood.core.workflow import Workflow

@@ -6,7 +6,7 @@
 
 from flashflood.node.chem.molecule import Molecule
 from flashflood.node.function.number import Number
-from flashflood.node.io.sdfile import SDFileLinesInput
+from flashflood.node.reader.sdfile import SDFileLinesInput
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.workflow.responseworkflow import ResponseWorkflow
 

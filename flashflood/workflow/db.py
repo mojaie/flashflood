@@ -6,7 +6,7 @@
 
 from flashflood.node.chem.molecule import Molecule
 from flashflood.node.function.number import Number
-from flashflood.node.io import sqlite
+from flashflood.node.reader import sqlite
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.workflow.responseworkflow import ResponseWorkflow
 
@@ -14,7 +14,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 class DBFilter(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteFilterInput(query)
+        sq_in = sqlite.SQLiteReaderFilter(query)
         number = Number()
         writer = ContainerWriter(self.results)
         self.connect(sq_in, number)
@@ -24,7 +24,7 @@ class DBFilter(ResponseWorkflow):
 class DBSearch(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteSearchInput(query)
+        sq_in = sqlite.SQLiteReaderSearch(query)
         number = Number()
         writer = ContainerWriter(self.results)
         self.connect(sq_in, number)
@@ -34,7 +34,7 @@ class DBSearch(ResponseWorkflow):
 class ChemDBFilter(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteFilterInput(query)
+        sq_in = sqlite.SQLiteReaderFilter(query)
         molecule = Molecule()
         number = Number()
         writer = ContainerWriter(self.results)
@@ -46,7 +46,7 @@ class ChemDBFilter(ResponseWorkflow):
 class ChemDBSearch(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteSearchInput(query)
+        sq_in = sqlite.SQLiteReaderSearch(query)
         molecule = Molecule()
         number = Number()
         writer = ContainerWriter(self.results)

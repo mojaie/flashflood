@@ -11,7 +11,7 @@ from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.node import Synchronizer, Asynchronizer
 from flashflood.node.function.number import Number, AsyncNumber
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 
 
 class TestNumber(AsyncTestCase):

@@ -9,7 +9,7 @@ import unittest
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.lod import ListOfDict
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 from flashflood.node.aggregate.update import AggUpdate
 
 

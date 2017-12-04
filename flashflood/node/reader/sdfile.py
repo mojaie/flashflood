@@ -14,7 +14,7 @@ from flashflood import static
 from flashflood.core.node import SyncNode
 
 
-class SDFileInputBase(SyncNode):
+class SDFileReaderBase(SyncNode):
     def __init__(self, sdf_options=(), implicit_hydrogen=False,
                  recalc_coords=False, fields=None, params=None):
         super().__init__(params=params)
@@ -45,14 +45,14 @@ class SDFileInputBase(SyncNode):
         self._out_edge.params.update(self.params)
 
 
-class SDFileInput(SDFileInputBase):
+class SDFileReader(SDFileReaderBase):
     def __init__(self, in_file, **kwargs):
         super().__init__(**kwargs)
         self.contents = v2000reader.mols_from_file(in_file)
         self.row_count = v2000reader.inspect_file(in_file)[1]
 
 
-class SDFileLinesInput(SDFileInputBase):
+class SDFileLinesInput(SDFileReaderBase):
     def __init__(self, lines, **kwargs):
         super().__init__(**kwargs)
         self.contents = v2000reader.mols_from_text(lines)

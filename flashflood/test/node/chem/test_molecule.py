@@ -12,7 +12,7 @@ from chorus import v2000reader as reader
 from chorus.model.graphmol import Compound
 
 from flashflood.node.chem.molecule import Molecule
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 
 
 class TestMolecule(unittest.TestCase):

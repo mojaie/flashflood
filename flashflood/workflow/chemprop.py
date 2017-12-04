@@ -15,7 +15,7 @@ from flashflood import static
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
-from flashflood.node.io.sqlite import SQLiteInput
+from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.workflow.responseworkflow import ResponseWorkflow
 
@@ -58,7 +58,7 @@ class ChemProp(ResponseWorkflow):
             static.CHEM_FUNCTIONS[query["key"]],
             OPERATORS[query["operator"]], v
         )
-        sq_in = SQLiteInput(query)
+        sq_in = SQLiteReader(query)
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()

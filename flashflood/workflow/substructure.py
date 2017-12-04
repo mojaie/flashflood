@@ -14,7 +14,7 @@ from chorus.model.graphmol import Compound
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
-from flashflood.node.io import sqlite
+from flashflood.node.reader import sqlite
 from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
 from flashflood.workflow.responseworkflow import ResponseWorkflow
@@ -51,7 +51,7 @@ class ExactStruct(ResponseWorkflow):
             "values": (molutil.mw(qmol),),
         }
         func = functools.partial(exact_filter, qmol, query["params"])
-        sq_filter = sqlite.SQLiteFilterInput(mw_filter)
+        sq_filter = sqlite.SQLiteReaderFilter(mw_filter)
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()
@@ -67,7 +67,7 @@ class Substruct(ResponseWorkflow):
         super().__init__(query, **kwargs)
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(substr_filter, qmol, query["params"])
-        sq_in = sqlite.SQLiteInput(query)
+        sq_in = sqlite.SQLiteReader(query)
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()
@@ -83,7 +83,7 @@ class Superstruct(ResponseWorkflow):
         super().__init__(query, **kwargs)
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(supstr_filter, qmol, query["params"])
-        sq_in = sqlite.SQLiteInput(query)
+        sq_in = sqlite.SQLiteReader(query)
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()

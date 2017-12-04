@@ -8,7 +8,7 @@ import unittest
 
 from tornado.testing import AsyncTestCase
 
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 
 
 class TestIteratorInput(AsyncTestCase):

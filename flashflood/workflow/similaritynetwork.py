@@ -13,7 +13,7 @@ from chorus import rdkit
 from chorus.model.graphmol import Compound
 
 from flashflood.node.function.filter import MPFilter
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 from flashflood.node.transform.combination import Combination
 from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.workflow.responseworkflow import ResponseWorkflow

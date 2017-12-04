@@ -8,7 +8,7 @@ import csv
 from flashflood.core.node import SyncNode
 
 
-class CSVFileInput(SyncNode):
+class CSVFileReader(SyncNode):
     def __init__(self, in_file, delimiter=",", fields=None, params=None):
         super().__init__(params=params)
         self.in_file = in_file

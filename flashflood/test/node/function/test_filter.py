@@ -10,7 +10,7 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.node.function.filter import Filter, MPFilter
-from flashflood.node.io.iterator import IteratorInput
+from flashflood.node.reader.iterator import IteratorInput
 from flashflood.core.node import Synchronizer
 
 

@@ -9,7 +9,7 @@ from flashflood.sqlitehelper import SQLITE_HELPER as sq
 from flashflood.core.node import SyncNode
 
 
-class SQLiteInput(SyncNode):
+class SQLiteReader(SyncNode):
     def __init__(self, query, params=None):
         super().__init__(params=params)
         self.query = query
@@ -21,7 +21,7 @@ class SQLiteInput(SyncNode):
         self._out_edge.params.update(self.params)
 
 
-class SQLiteSearchInput(SQLiteInput):
+class SQLiteReaderSearch(SQLiteReader):
     def on_submitted(self):
         self._out_edge.records = (
             sq.search(self.query["targets"], self.query["key"], v)
@@ -31,7 +31,7 @@ class SQLiteSearchInput(SQLiteInput):
         self._out_edge.params.update(self.params)
 
 
-class SQLiteFilterInput(SQLiteInput):
+class SQLiteReaderFilter(SQLiteReader):
     def on_submitted(self):
         self._out_edge.records = sq.find_all(
             self.query["targets"], self.query["key"],

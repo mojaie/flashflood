@@ -6,7 +6,7 @@
 
 from flashflood import lod
 from flashflood import sqlitehelper as helper
-from flashflood.node.io import sqlite
+from flashflood.node.reader import sqlite
 from flashflood.node.function.number import Number
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.node.record.merge import MergeRecords
@@ -29,7 +29,7 @@ class Profile(ResponseWorkflow):
             "key": "compound_id", "operator": "eq",
             "values": (query["compound_id"],)
         }
-        sq_filter = sqlite.SQLiteFilterInput(sq)
+        sq_filter = sqlite.SQLiteReaderFilter(sq)
         """
         if r["resourceType"] == "api":
             sq = {
