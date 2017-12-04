@@ -65,14 +65,23 @@ class Task(object):
 
     def on_finish(self):
         """When the task is finished without interruption"""
+        self.finish_time = round(time.time() - self.start_time, 1)
         self.status = "done"
 
     def on_aborted(self):
         """When the task is completely halted after calling interrupt method"""
+        self.finish_time = round(time.time() - self.start_time, 1)
         self.status = "aborted"
 
     def size(self):
         return debug.total_size(self)
+
+    def execution_time(self):
+        if self.start_time is None:
+            return
+        if self.finish_time is None:
+            return round(time.time() - self.start_time, 1)
+        return self.finish_time
 
 
 class IdleTask(Task):

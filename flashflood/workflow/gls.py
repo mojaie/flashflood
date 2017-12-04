@@ -10,13 +10,13 @@ import json
 from chorus import mcsdr
 from chorus.model.graphmol import Compound
 
-from flashflood.core.workflow import Workflow
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
-from flashflood.node.io.json import AsyncJSONResponse
 from flashflood.node.io.sqlite import SQLiteInput
+from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def mcsdr_filter(qmolarr, params, row):
@@ -42,10 +42,9 @@ def mcsdr_filter(qmolarr, params, row):
         return row
 
 
-class GLS(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class GLS(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         self.fields.extend([
             {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
             {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
@@ -58,8 +57,8 @@ class GLS(Workflow):
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()
-        response = AsyncJSONResponse(self)
+        writer = AsyncContainerWriter(self.results)
         self.connect(sq_in, mpf)
         self.connect(mpf, molecule)
         self.connect(molecule, number)
-        self.connect(number, response)
+        self.connect(number, writer)

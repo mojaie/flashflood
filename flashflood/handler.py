@@ -68,7 +68,7 @@ class WorkflowHandler(BaseHandler):
         }
         wf = workflows[query["type"]](query)
         yield wf.submit()
-        self.write(wf.output())
+        self.write(wf.response())
 
 
 class AsyncWorkflowHandler(BaseHandler):
@@ -91,7 +91,7 @@ class AsyncWorkflowHandler(BaseHandler):
         }
         wf = workflows[query["type"]](query)
         yield self.jq.put(wf)
-        self.write(wf.output())
+        self.write(wf.response())
 
 
 class ResultHandler(BaseHandler):
@@ -115,7 +115,7 @@ class ResultHandler(BaseHandler):
         else:
             if query["command"] == "abort":
                 yield self.jq.abort(query["id"])
-            self.write(wf.output())
+            self.write(wf.response())
 
 
 class SimilarityNetworkHandler(BaseHandler):
@@ -135,7 +135,7 @@ class SimilarityNetworkHandler(BaseHandler):
         }
         wf = workflows[params["measure"]](js, params)
         yield self.jq.put(wf)
-        self.write(wf.output())
+        self.write(wf.response())
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -167,7 +167,7 @@ class SDFileParserHandler(BaseHandler):
         }
         wf = SDFParser(contents, query)
         yield wf.submit()
-        self.write(wf.output())
+        self.write(wf.response())
 
 
 class SDFileExportHandler(BaseHandler):

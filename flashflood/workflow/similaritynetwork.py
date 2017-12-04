@@ -12,11 +12,11 @@ from chorus import molutil
 from chorus import rdkit
 from chorus.model.graphmol import Compound
 
-from flashflood.core.workflow import Workflow
 from flashflood.node.function.filter import MPFilter
-from flashflood.node.io.json import AsyncJSONResponse
 from flashflood.node.io.iterator import IteratorInput
 from flashflood.node.transform.combination import Combination
+from flashflood.node.writer.container import AsyncContainerWriter
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 GRAPH_FIELDS = [
@@ -86,12 +86,11 @@ def rdkit_mol(params, rcd):
     return {"index": rcd["_index"], "mol": mol}
 
 
-class GLSNetwork(Workflow):
-    def __init__(self, contents, params):
-        super().__init__()
-        self.datatype = "edges"
-        self.nodesid = contents["id"]
-        self.query = params
+class GLSNetwork(ResponseWorkflow):
+    def __init__(self, contents, params, **kwargs):
+        super().__init__(params, **kwargs)
+        self.data_type = "edges"
+        self.reference["nodes"] = contents["id"]
         self.fields.merge(GRAPH_FIELDS)
         arrgen = functools.partial(gls_array, params)
         arrs = map(arrgen, contents["records"])
@@ -99,43 +98,41 @@ class GLSNetwork(Workflow):
         iter_in = IteratorInput(arrs)
         comb = Combination()
         mpf = MPFilter(filter_)
-        response = AsyncJSONResponse(self)
+        writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
         self.connect(comb, mpf)
-        self.connect(mpf, response)
+        self.connect(mpf, writer)
 
 
-class RDKitMorganNetwork(Workflow):
-    def __init__(self, contents, params):
-        super().__init__()
-        self.datatype = "edges"
-        self.nodesid = contents["id"]
-        self.query = params
+class RDKitMorganNetwork(ResponseWorkflow):
+    def __init__(self, contents, params, **kwargs):
+        super().__init__(params, **kwargs)
+        self.data_type = "edges"
+        self.reference["nodes"] = contents["id"]
         self.fields.merge(GRAPH_FIELDS)
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(morgan_filter, params)
         iter_in = IteratorInput(mols)
         comb = Combination()
         mpf = MPFilter(filter_)
-        response = AsyncJSONResponse(self)
+        writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
         self.connect(comb, mpf)
-        self.connect(mpf, response)
+        self.connect(mpf, writer)
 
 
-class RDKitFMCSNetwork(Workflow):
-    def __init__(self, contents, params):
-        super().__init__()
-        self.datatype = "edges"
-        self.nodesid = contents["id"]
-        self.query = params
+class RDKitFMCSNetwork(ResponseWorkflow):
+    def __init__(self, contents, params, **kwargs):
+        super().__init__(params, **kwargs)
+        self.data_type = "edges"
+        self.reference["nodes"] = contents["id"]
         self.fields.merge(GRAPH_FIELDS)
         mols = map(functools.partial(rdkit_mol, params), contents["records"])
         filter_ = functools.partial(fmcs_filter, params)
         iter_in = IteratorInput(mols)
         comb = Combination()
         mpf = MPFilter(filter_)
-        response = AsyncJSONResponse(self)
+        writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
         self.connect(comb, mpf)
-        self.connect(mpf, response)
+        self.connect(mpf, writer)

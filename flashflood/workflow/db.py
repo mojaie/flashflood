@@ -4,56 +4,52 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.core.workflow import Workflow
 from flashflood.node.chem.molecule import Molecule
 from flashflood.node.function.number import Number
 from flashflood.node.io import sqlite
-from flashflood.node.io.json import JSONResponse
+from flashflood.node.writer.container import ContainerWriter
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
-class DBFilter(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class DBFilter(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         sq_in = sqlite.SQLiteFilterInput(query)
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(sq_in, number)
-        self.connect(number, response)
+        self.connect(number, writer)
 
 
-class DBSearch(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class DBSearch(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         sq_in = sqlite.SQLiteSearchInput(query)
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(sq_in, number)
-        self.connect(number, response)
+        self.connect(number, writer)
 
 
-class ChemDBFilter(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class ChemDBFilter(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         sq_in = sqlite.SQLiteFilterInput(query)
         molecule = Molecule()
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(sq_in, molecule)
         self.connect(molecule, number)
-        self.connect(number, response)
+        self.connect(number, writer)
 
 
-class ChemDBSearch(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class ChemDBSearch(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         sq_in = sqlite.SQLiteSearchInput(query)
         molecule = Molecule()
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(sq_in, molecule)
         self.connect(molecule, number)
-        self.connect(number, response)
+        self.connect(number, writer)

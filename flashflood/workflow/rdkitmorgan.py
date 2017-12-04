@@ -11,13 +11,13 @@ import traceback
 from chorus import rdkit
 from chorus.model.graphmol import Compound
 
-from flashflood.core.workflow import Workflow
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
-from flashflood.node.io.json import AsyncJSONResponse
 from flashflood.node.io.sqlite import SQLiteInput
+from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def rdmorgan_filter(qmol, params, row):
@@ -33,10 +33,9 @@ def rdmorgan_filter(qmol, params, row):
         return row
 
 
-class RDKitMorgan(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class RDKitMorgan(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         self.fields.add({
             "key": "_morgan_sim", "name": "Fingerprint similarity",
             "d3_format": ".2f"})
@@ -46,8 +45,8 @@ class RDKitMorgan(Workflow):
         mpf = MPFilter(func)
         molecule = AsyncMolecule()
         number = AsyncNumber()
-        response = AsyncJSONResponse(self)
+        writer = AsyncContainerWriter(self.results)
         self.connect(sq_in, mpf)
         self.connect(mpf, molecule)
         self.connect(molecule, number)
-        self.connect(number, response)
+        self.connect(number, writer)

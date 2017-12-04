@@ -6,11 +6,11 @@
 
 from flashflood import lod
 from flashflood import sqlitehelper as helper
-from flashflood.core.workflow import Workflow
 from flashflood.node.io import sqlite
 from flashflood.node.function.number import Number
-from flashflood.node.io.json import JSONResponse
+from flashflood.node.writer.container import ContainerWriter
 from flashflood.node.record.merge import MergeRecords
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def add_rsrc_fields(fields_dict, row):
@@ -19,10 +19,9 @@ def add_rsrc_fields(fields_dict, row):
     return row
 
 
-class Profile(Workflow):
-    def __init__(self, query):
-        super().__init__()
-        self.query = query
+class Profile(ResponseWorkflow):
+    def __init__(self, query, **kwargs):
+        super().__init__(query, **kwargs)
         targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
         target_ids = lod.valuelist(targets, "id")
         sq = {
@@ -44,6 +43,6 @@ class Profile(Workflow):
         merge = MergeRecords()
         self.connect(sq_filter, merge)
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(merge, number)
-        self.connect(number, response)
+        self.connect(number, writer)

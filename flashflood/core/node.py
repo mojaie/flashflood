@@ -17,10 +17,12 @@ class Node(Task):
         ready: ready to run
         done: finished and put all results to outgoing edges
     """
-    def __init__(self):
+    def __init__(self, params=None):
         super().__init__()
         self.node_num = None
         self._in_edge = None
+        if params is not None:
+            self.params.update(params)
 
     def add_in_edge(self, edge, port):
         if port != 0:
@@ -33,9 +35,9 @@ class Node(Task):
         return self._out_edge
 
     def on_submitted(self):
-        self._out_edge.task_count = self._in_edge.task_count
-        self._out_edge.fields.merge(self._in_edge.fields)
-        self._out_edge.fields.merge(self.fields)
+        # self._out_edge.task_count = self._in_edge.task_count
+        # self._out_edge.fields.merge(self._in_edge.fields)
+        # self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self._in_edge.params)
         self._out_edge.params.update(self.params)
 
@@ -47,11 +49,12 @@ class SyncNode(Node):
         ready: ready to run
         done: finished and put all results to outgoing edges
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self._out_edge = Edge()
 
     def run(self):
+        self.on_start()
         self.on_finish()
 
     def on_submitted(self):
@@ -60,8 +63,8 @@ class SyncNode(Node):
 
 
 class AsyncNode(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self._out_edge = AsyncQueueEdge()
         self.interval = 0.5
 
@@ -70,7 +73,7 @@ class AsyncNode(Node):
         while 1:
             in_ = yield self._in_edge.get()
             yield self._out_edge.put(in_)
-            self._out_edge.done_count = self._in_edge.done_count
+            # self._out_edge.done_count = self._in_edge.done_count
 
     @gen.coroutine
     def run(self):
@@ -96,12 +99,12 @@ class LazyNode(AsyncNode):
             in_ = yield self._in_edge.get()
             yield gen.sleep(0.01)
             yield self._out_edge.put(in_)
-            self._out_edge.done_count = self._in_edge.done_count
+            # self._out_edge.done_count = self._in_edge.done_count
 
 
 class Synchronizer(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self._out_edge = Edge()
         self.interval = 0.5
 
@@ -129,8 +132,8 @@ class Synchronizer(Node):
 
 class LazyConsumer(Synchronizer):
     """For async node test"""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self.task_count = 0
         self.done_count = 0
         self.records = []
@@ -140,16 +143,17 @@ class LazyConsumer(Synchronizer):
         while 1:
             in_ = yield self._in_edge.get()
             self.records.append(in_)
-            self.done_count = self._in_edge.done_count
+            # self.done_count = self._in_edge.done_count
             yield gen.sleep(0.01)
 
     def on_submitted(self):
-        self.task_count = self._in_edge.task_count
+        pass
+        # self.task_count = self._in_edge.task_count
 
 
 class Asynchronizer(Node):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self._out_edge = AsyncQueueEdge()
 
     @gen.coroutine
@@ -173,8 +177,8 @@ class Asynchronizer(Node):
 
 
 class EagerProducer(Asynchronizer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, params=None):
+        super().__init__(params)
         self._out_edge = AsyncQueueEdge()
         self.task_count = 1000
 

@@ -22,7 +22,6 @@ class Workflow(Task):
         self.succs = {}
         self.order = None
         self.interval = 0.5
-        self.query = {}
         self.datatype = "nodes"
         # TODO: verbose output
         self.verbose = verbose
@@ -34,7 +33,9 @@ class Workflow(Task):
 
     @gen.coroutine
     def run(self):
+        print("start")
         self.on_start()
+        print(self.start_time)
         for node_id in self.order:
             self.nodes[node_id].run()
         while any(n.status == "running" for n in self.nodes):

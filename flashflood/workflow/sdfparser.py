@@ -4,17 +4,16 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.core.workflow import Workflow
 from flashflood.node.chem.molecule import Molecule
 from flashflood.node.function.number import Number
-from flashflood.node.io.json import JSONResponse
 from flashflood.node.io.sdfile import SDFileLinesInput
+from flashflood.node.writer.container import ContainerWriter
+from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
-class SDFParser(Workflow):
-    def __init__(self, contents, query):
-        super().__init__()
-        self.query = query
+class SDFParser(ResponseWorkflow):
+    def __init__(self, query, contents, **kwargs):
+        super().__init__(query, **kwargs)
         sdf_in = SDFileLinesInput(
             contents, sdf_options=query["params"]["fields"],
             fields=[
@@ -23,7 +22,7 @@ class SDFParser(Workflow):
             ])
         molecule = Molecule()
         number = Number()
-        response = JSONResponse(self)
+        writer = ContainerWriter(self.results)
         self.connect(sdf_in, molecule)
         self.connect(molecule, number)
-        self.connect(number, response)
+        self.connect(number, writer)
