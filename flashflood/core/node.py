@@ -35,7 +35,6 @@ class Node(Task):
         return self._out_edge
 
     def on_submitted(self):
-        # self._out_edge.task_count = self._in_edge.task_count
         self._out_edge.fields.merge(self._in_edge.fields)
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self._in_edge.params)
@@ -50,21 +49,18 @@ class SyncNode(Node):
         done: finished and put all results to outgoing edges
     """
     def __init__(self, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self._out_edge = Edge()
-
-    def run(self):
-        self.on_start()
-        self.on_finish()
 
     def on_submitted(self):
         super().on_submitted()
+        # Set records to the downstream
         # self._out_edge.records = self._in_edge.records
 
 
 class AsyncNode(Node):
     def __init__(self, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self._out_edge = AsyncQueueEdge()
         self.interval = 0.5
 
@@ -73,7 +69,6 @@ class AsyncNode(Node):
         while 1:
             in_ = yield self._in_edge.get()
             yield self._out_edge.put(in_)
-            # self._out_edge.done_count = self._in_edge.done_count
 
     @gen.coroutine
     def run(self):
@@ -93,7 +88,7 @@ class AsyncNode(Node):
 
 class Synchronizer(Node):
     def __init__(self, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self._out_edge = Edge()
         self.interval = 0.5
 
@@ -121,7 +116,7 @@ class Synchronizer(Node):
 
 class Asynchronizer(Node):
     def __init__(self, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self._out_edge = AsyncQueueEdge()
 
     @gen.coroutine
@@ -131,7 +126,6 @@ class Asynchronizer(Node):
             if self.status == "interrupted":
                 return
             yield self._out_edge.put(in_)
-            self._out_edge.done_count += 1
         yield self._out_edge.done()
         self.on_finish()
 

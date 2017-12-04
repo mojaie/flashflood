@@ -15,7 +15,6 @@ class TestIteratorInput(AsyncTestCase):
     def test_iterator_input(self):
         f = IteratorInput(range(100))
         f.on_submitted()
-        self.assertEqual(f.out_edge(0).task_count, 100)
         f.run()
         self.assertEqual(sum(f.out_edge(0).records), 4950)
 

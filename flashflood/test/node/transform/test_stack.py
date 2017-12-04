@@ -29,7 +29,18 @@ class TestStack(AsyncTestCase):
         stack.add_in_edge(iter_in.out_edge(0), 0)
         iter_in.on_submitted()
         stack.on_submitted()
-        self.assertEqual(stack.out_edge(0).task_count, 10)
+        iter_in.run()
+        yield stack.run()
+        self.assertEqual(len(list(stack.out_edge(0).records)), 9)
+
+    @gen_test
+    def test_stack2(self):
+        iter_in = IteratorInput(RECORDS)
+        stack = Stack(('id',), skip_none=False)
+        stack.add_in_edge(iter_in.out_edge(0), 0)
+        iter_in.on_submitted()
+        stack.on_submitted()
+
         iter_in.run()
         yield stack.run()
         self.assertEqual(len(list(stack.out_edge(0).records)), 10)

@@ -11,7 +11,7 @@ from flashflood.core.node import Node, Synchronizer
 
 class ContainerWriter(Node):
     def __init__(self, container, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self.container = container
 
     def run(self):
@@ -25,7 +25,7 @@ class ContainerWriter(Node):
 
 class AsyncContainerWriter(Synchronizer):
     def __init__(self, container, params=None):
-        super().__init__(params)
+        super().__init__(params=params)
         self.container = container
         self.container.records = []
 

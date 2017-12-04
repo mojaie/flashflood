@@ -25,7 +25,6 @@ class TestCombination(AsyncTestCase):
         comb.add_in_edge(iter_in.out_edge(0), 0)
         iter_in.on_submitted()
         comb.on_submitted()
-        self.assertEqual(comb.out_edge(0).task_count, 45)
         iter_in.run()
         yield comb.run()
         self.assertEqual(len(list(comb.out_edge(0).records)), 45)

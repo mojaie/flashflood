@@ -32,7 +32,6 @@ class TestAggUpdate(AsyncTestCase):
         stack.add_in_edge(iter_in.out_edge(0), 0)
         iter_in.on_submitted()
         stack.on_submitted()
-        self.assertEqual(stack.out_edge(0).task_count, 7)
         iter_in.run()
         yield stack.run()
         rcds = ListOfDict(stack.out_edge(0).records)

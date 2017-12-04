@@ -17,7 +17,7 @@ from flashflood.core.node import SyncNode
 class SDFileInputBase(SyncNode):
     def __init__(self, sdf_options=(), implicit_hydrogen=False,
                  recalc_coords=False, fields=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.sdf_options = sdf_options
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
@@ -26,8 +26,6 @@ class SDFileInputBase(SyncNode):
         self.fields.add(static.MOLOBJ_FIELD)
         if fields is not None:
             self.fields.merge(fields)
-        if params is not None:
-            self.params.update(params)
 
     def records_iter(self):
         for mol in self.contents:
@@ -43,7 +41,6 @@ class SDFileInputBase(SyncNode):
 
     def on_submitted(self):
         self._out_edge.records = self.records_iter()
-        self._out_edge.task_count = self.row_count
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)
 

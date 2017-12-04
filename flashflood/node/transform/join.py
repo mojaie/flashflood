@@ -17,7 +17,7 @@ def leftjoin(key, mapping, row):
 
 class LeftJoin(SyncNode):
     def __init__(self, key, right_key=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self._left_in = None
         self._right_in = None
         self.key = key
@@ -25,8 +25,6 @@ class LeftJoin(SyncNode):
             self.right_key = key
         else:
             self.right_key = right_key
-        if params is not None:
-            self.params.update(params)
 
     def add_in_edge(self, edge, port):
         if port == 0:
@@ -40,7 +38,6 @@ class LeftJoin(SyncNode):
         mapping = {r[self.right_key]: r for r in self._right_in.records}
         func = functools.partial(leftjoin, self.key, mapping)
         self._out_edge.records = map(func, self._left_in.records)
-        self._out_edge.task_count = self._left_in.task_count
         self._out_edge.fields.merge(self._left_in.fields)
         self._out_edge.fields.merge(self._right_in.fields)
         self._out_edge.params.update(self._left_in.params)

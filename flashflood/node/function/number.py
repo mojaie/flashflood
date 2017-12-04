@@ -23,7 +23,7 @@ def number(name, zipped):
 class Number(SyncNode):
     def __init__(self, name=None, counter=itertools.count,
                  fields=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.counter = counter
         if name is None:
             name = "_index"
@@ -31,8 +31,6 @@ class Number(SyncNode):
             fields = [static.INDEX_FIELD]
         self.fields.merge(fields)
         self.func = functools.partial(number, name)
-        if params is not None:
-            self.params.update(params)
 
     def on_submitted(self):
         super().on_submitted()
@@ -43,7 +41,7 @@ class Number(SyncNode):
 class AsyncNumber(AsyncNode):
     def __init__(self, name="_index", counter=itertools.count,
                  fields=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.counter = counter
         if name is None:
             name = "_index"
@@ -51,8 +49,6 @@ class AsyncNumber(AsyncNode):
             fields = [static.INDEX_FIELD]
         self.fields.merge(fields)
         self.func = functools.partial(number, name)
-        if params is not None:
-            self.params.update(params)
 
     @gen.coroutine
     def _get_loop(self):
@@ -60,4 +56,3 @@ class AsyncNumber(AsyncNode):
         while 1:
             in_ = yield self._in_edge.get()
             yield self._out_edge.put(self.func((in_, next(cnt))))
-            self._out_edge.done_count = self._in_edge.done_count

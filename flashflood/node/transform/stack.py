@@ -21,11 +21,9 @@ def stack(row, keys, skip_none):
 
 class Stack(SyncNode):
     def __init__(self, keys, skip_none=True, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.keys = keys
         self.skip_none = skip_none
-        if params is not None:
-            self.params.update(params)
         self.fields = [
             {"key": "_field", "name": "field", "format": "text"},
             {"key": "_value", "name": "value", "format": "text"}
@@ -35,9 +33,7 @@ class Stack(SyncNode):
         stacked = itertools.chain.from_iterable(
             stack(rcd, self.keys, self.skip_none)
             for rcd in self._in_edge.records)
-        main, counter = itertools.tee(stacked)
-        self._out_edge.records = main
-        self._out_edge.task_count = sum(1 for i in counter)
+        self._out_edge.records = stacked
         fs = filter(lambda x: x["key"] in self.keys, self._in_edge.fields)
         self._out_edge.fields.merge(fs)
         self._out_edge.fields.merge(self.fields)

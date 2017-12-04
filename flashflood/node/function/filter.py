@@ -11,12 +11,10 @@ from flashflood.core.node import SyncNode, Asynchronizer
 
 class Filter(SyncNode):
     def __init__(self, func, fields=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.func = func
         if fields is not None:
             self.fields.merge(fields)
-        if params is not None:
-            self.params.update(params)
 
     def on_submitted(self):
         super().on_submitted()
@@ -30,12 +28,8 @@ class MPNodeWorker(MPWorker):
 
     @gen.coroutine
     def on_task_done(self, record):
-        self.node._out_edge.done_count += 1
         if record:
             yield self.node._out_edge.put(record)
-        # TODO:
-        # if not done_count % 100:
-        #     yield self.node.out_edge.proceed()
 
     @gen.coroutine
     def on_finish(self):
@@ -52,13 +46,11 @@ class MPNodeWorker(MPWorker):
 
 class MPFilter(Asynchronizer):
     def __init__(self, func, fields=None, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.func = func
         self.worker = None
         if fields is not None:
             self.fields.merge(fields)
-        if params is not None:
-            self.params.update(params)
 
     @gen.coroutine
     def run(self):

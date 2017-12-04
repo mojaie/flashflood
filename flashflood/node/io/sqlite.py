@@ -11,15 +11,12 @@ from flashflood.core.node import SyncNode
 
 class SQLiteInput(SyncNode):
     def __init__(self, query, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self.query = query
         self.fields = sq.resource_fields(query["targets"])
-        if params is not None:
-            self.params.update(params)
 
     def on_submitted(self):
         self._out_edge.records = sq.records_iter(self.query["targets"])
-        self._out_edge.task_count = sq.record_count(self.query["targets"])
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)
 
@@ -30,7 +27,6 @@ class SQLiteSearchInput(SQLiteInput):
             sq.search(self.query["targets"], self.query["key"], v)
             for v in self.query["values"]
         )
-        self._out_edge.task_count = sq.record_count(self.query["targets"])
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)
 
@@ -42,7 +38,6 @@ class SQLiteFilterInput(SQLiteInput):
             self.query["values"], self.query["operator"],
             fields=self.query.get("fields")
         )
-        self._out_edge.task_count = sq.record_count(self.query["targets"])
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)
 
@@ -60,6 +55,5 @@ class SQLiteCustomQueryInput(SyncNode):
     def on_submitted(self):
         conn = Connection()
         self._out_edge.records = conn.fetch_iter(self.sql)
-        self._out_edge.task_count = conn.rows_count(self.table)
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)

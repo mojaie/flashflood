@@ -23,7 +23,6 @@ class Edge(object):
         self.records = []
         self.fields = ListOfDict()
         self.params = {}
-        self.task_count = 0
 
 
 class AsyncQueueEdge(object):
@@ -50,8 +49,6 @@ class AsyncQueueEdge(object):
         self.status = "ready"
         self.fields = ListOfDict()
         self.params = {}
-        self.task_count = 0
-        self.done_count = 0
 
     @gen.coroutine
     def put(self, record):

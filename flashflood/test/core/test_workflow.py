@@ -10,8 +10,10 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.node import Asynchronizer
+from flashflood.core.container import Container
 from flashflood.node.io.iterator import IteratorInput
-from flashflood.node.io.json import JSONResponse, AsyncJSONResponse
+from flashflood.node.writer.container import (
+    ContainerWriter, AsyncContainerWriter)
 from flashflood.core.workflow import Workflow
 
 
@@ -23,38 +25,38 @@ class TestWorkflow(AsyncTestCase):
     @gen_test
     def test_workflow(self):
         wf = Workflow()
+        wf.results = Container()
         iter_in = IteratorInput(range(10))
-        res = JSONResponse(wf)
-        wf.connect(iter_in, res)
+        writer = ContainerWriter(wf.results)
+        wf.connect(iter_in, writer)
         yield wf.submit()
-        self.assertEqual(sum(wf.result_records), 45)
+        self.assertEqual(sum(wf.results.records), 45)
         self.assertTrue(all(n.status == "done" for n in wf.nodes))
 
     @gen_test
     def test_asyncworkflow(self):
         wf = Workflow()
+        wf.results = Container()
         wf.interval = 0.01
         iter_in = IteratorInput(range(10000))
         async = Asynchronizer()
-        res = AsyncJSONResponse(wf)
-        res.interval = 0.01
+        writer = AsyncContainerWriter(wf.results)
+        writer.interval = 0.01
         wf.connect(iter_in, async)
-        wf.connect(async, res)
+        wf.connect(async, writer)
         wf.on_submitted()
         self.assertEqual(iter_in.status, "ready")
         self.assertEqual(async.status, "ready")
-        self.assertEqual(res.status, "ready")
+        self.assertEqual(writer.status, "ready")
         wf.run()
         self.assertEqual(iter_in.status, "done")
         self.assertEqual(async.status, "running")
-        self.assertEqual(res.status, "running")
+        self.assertEqual(writer.status, "running")
         yield wf.interrupt()
         yield gen.sleep(0.1)
         self.assertEqual(iter_in.status, "done")
         self.assertEqual(async.status, "aborted")
-        self.assertEqual(res.status, "aborted")
-        self.assertEqual(wf.task_count, 10000)
-        self.assertGreater(wf.done_count, 0)
+        self.assertEqual(writer.status, "aborted")
 
 
 if __name__ == '__main__':

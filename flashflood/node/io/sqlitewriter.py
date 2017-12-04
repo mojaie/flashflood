@@ -12,6 +12,8 @@ import traceback
 from flashflood.core.node import Node
 from flashflood.util import debug
 
+
+# TODO: move to static
 data_type = {
     "id": "text",
     "compound_id": "text",
@@ -140,13 +142,9 @@ class SQLiteWriter(Node):
             print("Cleaning up...")
             cur.execute("VACUUM")
             self.conn.close()
-            self.wf.done_count = self.wf.result_count = self.wf.task_count
             self.on_finish()
 
     def on_submitted(self):
-        self.wf.task_count = sum(i.task_count for i in self._in_edges)
-        self.wf.result_count = 0
-        self.wf.done_count = 0
         if os.path.exists(self.dest_path) and not self.allow_overwrite:
             raise ValueError("SQLite file already exists.")
 

@@ -11,10 +11,8 @@ from flashflood.core.node import SyncNode
 
 class MergeRecords(SyncNode):
     def __init__(self, params=None):
-        super().__init__()
+        super().__init__(params=params)
         self._in_edges = []
-        if params is not None:
-            self.params.update(params)
 
     def add_in_edge(self, edge, port):
         if port != 0:
@@ -24,7 +22,6 @@ class MergeRecords(SyncNode):
     def on_submitted(self):
         self._out_edge.records = itertools.chain.from_iterable(
             i.records for i in self._in_edges)
-        self._out_edge.task_count = sum([i.task_count for i in self._in_edges])
         for e in self._in_edges:
             self._out_edge.fields.merge(e.fields)
         for e in self._in_edges:
