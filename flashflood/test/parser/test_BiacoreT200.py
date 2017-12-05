@@ -7,7 +7,7 @@
 import os
 import unittest
 
-from kiwiii.parser import BiacoreT200 as bia
+from flashflood.parser import BiacoreT200 as bia
 
 HERE = os.path.dirname(__file__)
 TEST_FILE = os.path.join(HERE, "../../resources/raw/BiacoreT200.txt")

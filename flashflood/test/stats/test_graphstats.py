@@ -29,6 +29,7 @@ data = {
 }
 
 
+@unittest.skip("needs networkx v2 compatibility")
 class TestGraphStats(unittest.TestCase):
     def test_graph_stats(self):
         G = graphgen.graph_loader(data, "id")
