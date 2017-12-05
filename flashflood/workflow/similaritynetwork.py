@@ -13,6 +13,7 @@ from chorus import rdkit
 from chorus.model.graphmol import Compound
 
 from flashflood.node.function.filter import MPFilter
+from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.iterator import IteratorInput
 from flashflood.node.transform.combination import Combination
 from flashflood.node.writer.container import AsyncContainerWriter
@@ -97,11 +98,15 @@ class GLSNetwork(ResponseWorkflow):
         filter_ = functools.partial(gls_filter, params)
         iter_in = IteratorInput(arrs)
         comb = Combination()
-        mpf = MPFilter(filter_)
+        count_in = CountRows(self.input_size)
+        mpf = MPFilter(filter_, residue_counter=self.done_count)
+        count_out = AsyncCountRows(self.done_count)
         writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
-        self.connect(comb, mpf)
-        self.connect(mpf, writer)
+        self.connect(comb, count_in)
+        self.connect(count_in, mpf)
+        self.connect(mpf, count_out)
+        self.connect(count_out, writer)
 
 
 class RDKitMorganNetwork(ResponseWorkflow):
@@ -114,11 +119,15 @@ class RDKitMorganNetwork(ResponseWorkflow):
         filter_ = functools.partial(morgan_filter, params)
         iter_in = IteratorInput(mols)
         comb = Combination()
-        mpf = MPFilter(filter_)
+        count_in = CountRows(self.input_size)
+        mpf = MPFilter(filter_, residue_counter=self.done_count)
+        count_out = AsyncCountRows(self.done_count)
         writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
-        self.connect(comb, mpf)
-        self.connect(mpf, writer)
+        self.connect(comb, count_in)
+        self.connect(count_in, mpf)
+        self.connect(mpf, count_out)
+        self.connect(count_out, writer)
 
 
 class RDKitFMCSNetwork(ResponseWorkflow):
@@ -131,8 +140,12 @@ class RDKitFMCSNetwork(ResponseWorkflow):
         filter_ = functools.partial(fmcs_filter, params)
         iter_in = IteratorInput(mols)
         comb = Combination()
-        mpf = MPFilter(filter_)
+        count_in = CountRows(self.input_size)
+        mpf = MPFilter(filter_, residue_counter=self.done_count)
+        count_out = AsyncCountRows(self.done_count)
         writer = AsyncContainerWriter(self.results)
         self.connect(iter_in, comb)
-        self.connect(comb, mpf)
-        self.connect(mpf, writer)
+        self.connect(comb, count_in)
+        self.connect(count_in, mpf)
+        self.connect(mpf, count_out)
+        self.connect(count_out, writer)

@@ -15,6 +15,7 @@ from flashflood import static
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
+from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.workflow.responseworkflow import ResponseWorkflow
@@ -59,11 +60,15 @@ class ChemProp(ResponseWorkflow):
             OPERATORS[query["operator"]], v
         )
         sq_in = SQLiteReader(query)
-        mpf = MPFilter(func)
+        count_in = CountRows(self.input_size)
+        mpf = MPFilter(func, residue_counter=self.done_count)
         molecule = AsyncMolecule()
         number = AsyncNumber()
+        count_out = AsyncCountRows(self.done_count)
         writer = AsyncContainerWriter(self.results)
-        self.connect(sq_in, mpf)
+        self.connect(sq_in, count_in)
+        self.connect(count_in, mpf)
         self.connect(mpf, molecule)
         self.connect(molecule, number)
-        self.connect(number, writer)
+        self.connect(number, count_out)
+        self.connect(count_out, writer)

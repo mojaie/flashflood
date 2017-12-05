@@ -4,21 +4,33 @@
 # http://opensource.org/licenses/MIT
 #
 
+import itertools
+
 from tornado import gen
+
 from flashflood.core.task import MPWorker
 from flashflood.core.node import SyncNode, Asynchronizer
 
 
 class Filter(SyncNode):
-    def __init__(self, func, fields=None, params=None):
+    def __init__(self, func, residue_counter=None, fields=None, params=None):
         super().__init__(params=params)
         self.func = func
         if fields is not None:
             self.fields.merge(fields)
+        self.residue_counter = residue_counter
 
     def on_submitted(self):
         super().on_submitted()
         self._out_edge.records = filter(self.func, self._in_edge.records)
+
+    def run(self):
+        self.on_start()
+        if self.residue_counter is not None:
+            self.residue_counter.value = sum(
+                1 for _ in itertools.filterfalse(self.func,
+                                                 self._in_edge.records))
+        self.on_finish()
 
 
 class MPNodeWorker(MPWorker):
@@ -30,6 +42,8 @@ class MPNodeWorker(MPWorker):
     def on_task_done(self, record):
         if record:
             yield self.node._out_edge.put(record)
+        elif self.node.residue_counter is not None:
+            self.node.residue_counter.value += 1
 
     @gen.coroutine
     def on_finish(self):
@@ -45,12 +59,13 @@ class MPNodeWorker(MPWorker):
 
 
 class MPFilter(Asynchronizer):
-    def __init__(self, func, fields=None, params=None):
+    def __init__(self, func, residue_counter=None, fields=None, params=None):
         super().__init__(params=params)
         self.func = func
         self.worker = None
         if fields is not None:
             self.fields.merge(fields)
+        self.residue_counter = residue_counter
 
     @gen.coroutine
     def run(self):

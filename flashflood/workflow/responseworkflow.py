@@ -20,7 +20,7 @@ class ResponseWorkflow(Workflow):
         self.done_count = Container()
         self.input_size = Container()
         self.reference = {}
-        self.data_type = "node"
+        self.data_type = "nodes"
 
     def response(self):
         return {
@@ -55,11 +55,13 @@ class ResponseWorkflow(Workflow):
         self.fields.merge(fields)
 
     def progress(self):
-        # TODO: stub
-        self.done_count.value = 1
-        self.input_size.value = 1
-        try:
-            p = round(self.done_count.value / self.input_size.value * 100, 1)
-        except ZeroDivisionError:
-            p = None
-        return p
+        if self.status == "done":
+            return 100
+        if self.status in ("running", "interrupted", "aborted"):
+            try:
+                p = self.done_count.value / self.input_size.value
+            except ZeroDivisionError:
+                return
+            return round(p * 100, 1)
+        else:
+            return 0
