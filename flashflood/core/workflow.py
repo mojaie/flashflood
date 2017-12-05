@@ -86,6 +86,23 @@ class Workflow(Task):
         self.preds[down.node_num][up.node_num] = up_port
         self.succs[up.node_num][down.node_num] = down_port
 
+    def append(self, node, up_port=0, down_port=0):
+        """Adds a node connected to the latest added node
+            Args:
+                node: target node
+                port: output port of target node
+        """
+        if node.node_num is not None:
+            raise ValueError("This node is already assigned to the workflow")
+        node.node_num = len(self.nodes)
+        self.nodes.append(node)
+        self.preds[node.node_num] = {}
+        self.succs[node.node_num] = {}
+        latest = self.nodes[-1].node_num - 1
+        if latest != -1:
+            self.preds[node.node_num][latest] = up_port
+            self.succs[latest][node.node_num] = down_port
+
 
 class SubWorkflow(Workflow):
     def __init__(self, params=None, verbose=False):
