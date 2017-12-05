@@ -14,6 +14,7 @@ from chorus.model.graphmol import Compound
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
+from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import AsyncContainerWriter
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
@@ -41,12 +42,10 @@ class RDKitMorgan(ResponseWorkflow):
             "d3_format": ".2f"})
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(rdmorgan_filter, qmol, query["params"])
-        sq_in = SQLiteReader(query)
-        mpf = MPFilter(func)
-        molecule = AsyncMolecule()
-        number = AsyncNumber()
-        writer = AsyncContainerWriter(self.results)
-        self.connect(sq_in, mpf)
-        self.connect(mpf, molecule)
-        self.connect(molecule, number)
-        self.connect(number, writer)
+        self.append(SQLiteReader(query))
+        self.append(CountRows(self.input_size))
+        self.append(MPFilter(func, residue_counter=self.done_count))
+        self.append(AsyncMolecule())
+        self.append(AsyncNumber())
+        self.append(AsyncCountRows(self.done_count))
+        self.append(AsyncContainerWriter(self.results))

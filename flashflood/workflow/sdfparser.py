@@ -20,9 +20,7 @@ class SDFParser(ResponseWorkflow):
                 {"key": q, "name": q, "format": "text"}
                 for q in query["params"]["fields"]
             ])
-        molecule = Molecule()
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(sdf_in, molecule)
-        self.connect(molecule, number)
-        self.connect(number, writer)
+        self.append(sdf_in)
+        self.append(Molecule())
+        self.append(Number())
+        self.append(ContainerWriter(self.results))

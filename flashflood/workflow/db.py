@@ -14,42 +14,32 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 class DBFilter(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteReaderFilter(query)
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(sq_in, number)
-        self.connect(number, writer)
+        self.append(sqlite.SQLiteReaderFilter(query))
+        self.append(Number())
+        self.append(ContainerWriter(self.results))
 
 
 class DBSearch(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteReaderSearch(query)
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(sq_in, number)
-        self.connect(number, writer)
+        self.append(sqlite.SQLiteReaderSearch(query))
+        self.append(Number())
+        self.append(ContainerWriter(self.results))
 
 
 class ChemDBFilter(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteReaderFilter(query)
-        molecule = Molecule()
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(sq_in, molecule)
-        self.connect(molecule, number)
-        self.connect(number, writer)
+        self.append(sqlite.SQLiteReaderFilter(query))
+        self.append(Molecule())
+        self.append(Number())
+        self.append(ContainerWriter(self.results))
 
 
 class ChemDBSearch(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        sq_in = sqlite.SQLiteReaderSearch(query)
-        molecule = Molecule()
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(sq_in, molecule)
-        self.connect(molecule, number)
-        self.connect(number, writer)
+        self.append(sqlite.SQLiteReaderSearch(query))
+        self.append(Molecule())
+        self.append(Number())
+        self.append(ContainerWriter(self.results))

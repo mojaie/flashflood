@@ -42,7 +42,5 @@ class Profile(ResponseWorkflow):
         """
         merge = MergeRecords()
         self.connect(sq_filter, merge)
-        number = Number()
-        writer = ContainerWriter(self.results)
-        self.connect(merge, number)
-        self.connect(number, writer)
+        self.connect(merge, Number())
+        self.append(ContainerWriter(self.results))
