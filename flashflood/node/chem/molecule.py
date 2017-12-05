@@ -11,6 +11,7 @@ import pickle
 from chorus.model.graphmol import Compound
 
 from flashflood import static
+from flashflood.core.node import FunctionNode
 from flashflood.node.function.apply import Apply, AsyncApply
 
 
@@ -26,6 +27,17 @@ def chem_data(chem_calcs, pickle_mol, row):
 
 
 class Molecule(Apply):
+    def __init__(self, chem_calcs=None, pickle_mol=False,
+                 fields=None, params=None):
+        super().__init__(None, fields=fields, params=params)
+        if fields is None:
+            self.fields.merge(static.CHEM_FIELDS)
+        if chem_calcs is None:
+            chem_calcs = static.CHEM_FUNCTIONS
+        self.func = functools.partial(chem_data, chem_calcs, pickle_mol)
+
+
+class FuncMolecule(FunctionNode):
     def __init__(self, chem_calcs=None, pickle_mol=False,
                  fields=None, params=None):
         super().__init__(None, fields=fields, params=params)

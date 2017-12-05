@@ -17,9 +17,24 @@ class Edge(object):
         records (iterable): records store
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
-        task_count (int): number of tasks which should be processed
     """
     def __init__(self):
+        self.records = []
+        self.fields = ListOfDict()
+        self.params = {}
+
+
+class FunctionEdge(object):
+    """Function data flow edge
+
+    Attributes:
+        func (callable): function to be applied
+        records (iterable): records store
+        fields (lod.ListOfDict): data fields
+        params (dict): optional parameters which will be sent to downstream
+    """
+    def __init__(self):
+        self.func = None
         self.records = []
         self.fields = ListOfDict()
         self.params = {}

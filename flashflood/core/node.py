@@ -6,7 +6,8 @@
 
 from tornado import gen
 
-from flashflood.core.edge import Edge, AsyncQueueEdge
+from flashflood import functional
+from flashflood.core.edge import Edge, FunctionEdge, AsyncQueueEdge
 from flashflood.core.task import Task
 
 
@@ -52,10 +53,55 @@ class SyncNode(Node):
         super().__init__(params=params)
         self._out_edge = Edge()
 
+    # Set records to the downstream
+    # def on_submitted(self):
+    #     super().on_submitted()
+    #     # self._out_edge.records = self._in_edge.records
+
+
+class FunctionNode(Node):
+    """
+    Parameters:
+      status: str
+        ready: ready to run
+        done: finished and put all results to outgoing edges
+    """
+    def __init__(self, func, params=None):
+        super().__init__(params=params)
+        self.func = func
+        self._out_edge = FunctionEdge()
+
     def on_submitted(self):
         super().on_submitted()
-        # Set records to the downstream
-        # self._out_edge.records = self._in_edge.records
+        if isinstance(self._in_edge, FunctionEdge):
+            self._out_edge.func = functional.compose(
+                self._in_edge.func, self.func)
+        else:
+            self._out_edge.func = self.func
+        self._out_edge.records = self._in_edge.records
+
+
+class Apply(Node):
+    """
+    Parameters:
+      status: str
+        ready: ready to run
+        done: finished and put all results to outgoing edges
+    """
+    def __init__(self, func=None, params=None):
+        super().__init__(params=params)
+        self.func = func
+        self._out_edge = Edge()
+
+    def on_submitted(self):
+        super().on_submitted()
+        if isinstance(self._in_edge, FunctionEdge) and self.func:
+            func = functional.compose(self._in_edge.func, self.func)
+        elif isinstance(self._in_edge, FunctionEdge):
+            func = self._in_edge.func
+        elif self.func:
+            func = self.func
+        self._out_edge.records = map(func, self._in_edge.records)
 
 
 class AsyncNode(Node):

@@ -4,6 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
+from multiprocessing import current_process
 import unittest
 
 from tornado import gen
@@ -16,6 +17,10 @@ from flashflood.node.reader.iterator import IteratorInput
 from flashflood.node.writer.container import (
     ContainerWriter, AsyncContainerWriter)
 from flashflood.core.workflow import Workflow, SubWorkflow
+
+
+def twice(x):
+    return (x * 2, current_process().name)
 
 
 class TestWorkflow(AsyncTestCase):
@@ -61,9 +66,9 @@ class TestWorkflow(AsyncTestCase):
     def test_subworkflow(self):
         # sub
         sub = SubWorkflow()
-        twice = Apply(lambda x: x * 2)
-        sub.set_entrance(twice)
-        sub.set_exit(twice)
+        tw = Apply(twice)
+        sub.set_entrance(tw)
+        sub.set_exit(tw)
         # main
         wf = Workflow()
         results = Container()
@@ -73,7 +78,8 @@ class TestWorkflow(AsyncTestCase):
         wf.append(sub)
         wf.append(writer)
         yield wf.submit()
-        self.assertEqual(sum(results.records), 90)
+        self.assertEqual(sum(i[0] for i in results.records), 90)
+        self.assertEqual(len(set(i[1] for i in results.records)), 1)
         self.assertTrue(all(n.status == "done" for n in sub.nodes))
         self.assertTrue(all(n.status == "done" for n in wf.nodes))
 
