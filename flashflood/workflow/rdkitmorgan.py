@@ -36,13 +36,15 @@ def rdmorgan_filter(qmol, params, row):
 class RDKitMorgan(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        self.fields.add({
-            "key": "_morgan_sim", "name": "Fingerprint similarity",
-            "d3_format": ".2f"})
         qmol = sq.query_mol(query["queryMol"])
         func = functools.partial(rdmorgan_filter, qmol, query["params"])
         sq_in = SQLiteReader(query)
-        mpf = MPFilter(func)
+        mpf = MPFilter(
+            func, fields=[
+                {"key": "_morgan_sim", "name": "Fingerprint similarity",
+                 "d3_format": ".2f"}
+            ]
+        )
         molecule = AsyncMolecule()
         number = AsyncNumber()
         writer = AsyncContainerWriter(self.results)

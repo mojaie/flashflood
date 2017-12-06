@@ -12,7 +12,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 class SDFParser(ResponseWorkflow):
-    def __init__(self, query, contents, **kwargs):
+    def __init__(self, contents, query, **kwargs):
         super().__init__(query, **kwargs)
         sdf_in = SDFileLinesInput(
             contents, sdf_options=query["params"]["fields"],

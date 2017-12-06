@@ -46,17 +46,19 @@ def mcsdr_filter(qmolarr, params, row):
 class GLS(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        self.fields.extend([
-            {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
-            {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
-        ])
         qmol = sq.query_mol(query["queryMol"])
         qmolarr = mcsdr.comparison_array(
             qmol, query["params"]["diameter"], query["params"]["maxTreeSize"])
         func = functools.partial(mcsdr_filter, qmolarr, query["params"])
         sq_in = SQLiteReader(query)
         count_in = CountRows(self.input_size)
-        mpf = MPFilter(func, residue_counter=self.done_count)
+        mpf = MPFilter(
+            func, residue_counter=self.done_count,
+            fields=[
+                {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
+                {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
+            ]
+        )
         molecule = AsyncMolecule()
         number = AsyncNumber()
         count_out = AsyncCountRows(self.done_count)

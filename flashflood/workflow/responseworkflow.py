@@ -43,7 +43,6 @@ class ResponseWorkflow(Workflow):
     def on_submitted(self):
         super().on_submitted()
         # reorder fields
-        # TODO: set hidden fields
         fields = ListOfDict(self.results.fields)
         fields.delete("key", "_molobj")
         idx = fields.pick("key", "_index")
@@ -53,6 +52,10 @@ class ResponseWorkflow(Workflow):
         if struct:
             self.fields.add(struct)
         self.fields.merge(fields)
+        # set hidden fields
+        for f in self.fields:
+            if not f["key"].startswith("_"):
+                f["visible"] = False
 
     def progress(self):
         if self.status == "done":
