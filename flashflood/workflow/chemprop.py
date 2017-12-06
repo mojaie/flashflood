@@ -34,7 +34,7 @@ OPERATORS = {
 
 
 def prop_filter(func, op, val, row):
-    mol = Compound(json.loads(row["_molobj"]))
+    mol = Compound(json.loads(row["__molobj"]))
     try:
         valid = op(func(mol), val)
     except TypeError as e:

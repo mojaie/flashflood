@@ -21,7 +21,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def rdmorgan_filter(qmol, params, row):
-    mol = Compound(json.loads(row["_molobj"]))
+    mol = Compound(json.loads(row["__molobj"]))
     try:
         score = rdkit.morgan_sim(mol, qmol, 4)
     except:
@@ -29,7 +29,7 @@ def rdmorgan_filter(qmol, params, row):
         return
     thld = float(params["threshold"])
     if score >= thld:
-        row["_morgan_sim"] = score
+        row["morgan_sim"] = score
         return row
 
 
@@ -41,7 +41,7 @@ class RDKitMorgan(ResponseWorkflow):
         sq_in = SQLiteReader(query)
         mpf = MPFilter(
             func, fields=[
-                {"key": "_morgan_sim", "name": "Fingerprint similarity",
+                {"key": "morgan_sim", "name": "Fingerprint similarity",
                  "d3_format": ".2f"}
             ]
         )

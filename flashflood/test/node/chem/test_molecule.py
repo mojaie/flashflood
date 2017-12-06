@@ -25,7 +25,7 @@ class TestMolecule(unittest.TestCase):
         iter_in.run()
         yield mol.run()
         rcd = mol.out_edge(0).records[0]
-        out = Compound(json.loads(rcd["_molobj"]))
+        out = Compound(json.loads(rcd["__molobj"]))
         self.assertEqual(len(out), 20)
         self.assertAlmostEqual(rcd["_mw"], 754.7)
         self.assertEqual(mol.status, "done")

@@ -86,7 +86,7 @@ class SQLiteWriter(Node):
                 table_name = in_edge.params["table"]
                 for field in in_edge.fields:
                     fieldphrase = field["key"]
-                    sqtype = data_type.get(field.get("valueType"), "text")
+                    sqtype = data_type.get(field.get("format"), "text")
                     fieldphrase += " {}".format(sqtype)
                     if self.primary_key is not None and \
                             field["key"] == self.primary_key:

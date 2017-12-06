@@ -14,7 +14,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def add_rsrc_fields(fields_dict, row):
-    row.update(fields_dict[row["_field"]])
+    row.update(fields_dict[row["field"]])
     del row["key"]
     return row
 

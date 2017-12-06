@@ -22,7 +22,7 @@ class SDFileReaderBase(SyncNode):
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
         self.fields.merge(
-            {"key": s, "name": s, "valueType": "text"} for s in sdf_options)
+            {"key": s, "name": s, "format": "text"} for s in sdf_options)
         self.fields.add(static.MOLOBJ_FIELD)
         if fields is not None:
             self.fields.merge(fields)
@@ -34,7 +34,7 @@ class SDFileReaderBase(SyncNode):
                 mol = molutil.make_Hs_implicit(mol)
             if self.recalc_coords:
                 calc2dcoords.calc2dcoords(mol)
-            row["_molobj"] = json.dumps(mol.jsonized())
+            row["__molobj"] = json.dumps(mol.jsonized())
             for op in self.sdf_options:
                 row[op] = mol.data.get(op, "")
             yield row

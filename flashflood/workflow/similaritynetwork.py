@@ -71,20 +71,20 @@ def fmcs_filter(params, pair):
 
 
 def gls_array(params, rcd):
-    mol = Compound(json.loads(rcd["_molobj"]))
+    mol = Compound(json.loads(rcd["__molobj"]))
     if params["ignoreHs"]:
         mol = molutil.make_Hs_implicit(mol)
     diam = int(params["diameter"])
     tree = int(params["maxTreeSize"])
     arr = mcsdr.comparison_array(mol, diam, tree)
-    return {"index": rcd["_index"], "array": arr}
+    return {"index": rcd["index"], "array": arr}
 
 
 def rdkit_mol(params, rcd):
-    mol = Compound(json.loads(rcd["_molobj"]))
+    mol = Compound(json.loads(rcd["__molobj"]))
     if params["ignoreHs"]:
         mol = molutil.make_Hs_implicit(mol)
-    return {"index": rcd["_index"], "mol": mol}
+    return {"index": rcd["index"], "mol": mol}
 
 
 class GLSNetwork(ResponseWorkflow):

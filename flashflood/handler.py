@@ -177,7 +177,7 @@ class SDFileExportHandler(BaseHandler):
                 if c["visible"] and c["sortType"] != "none"]
         mols = []
         for rcd in js["records"]:
-            mol = Compound(json.loads(rcd["_molobj"]))
+            mol = Compound(json.loads(rcd["__molobj"]))
             for col in cols:
                 mol.data[col] = rcd[col]
             mols.append(mol)

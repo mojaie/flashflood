@@ -21,7 +21,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def mcsdr_filter(qmolarr, params, row):
-    mol = Compound(json.loads(row["_molobj"]))
+    mol = Compound(json.loads(row["__molobj"]))
     type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
     if len(mol) > params["molSizeCutoff"]:  # mol size filter
         return
@@ -38,8 +38,8 @@ def mcsdr_filter(qmolarr, params, row):
         return  # fragment size filter
     res = mcsdr.local_sim(arr, qmolarr)
     if res[type_[params["measure"]]] >= thld:
-        row["_local_sim"] = res["local_sim"]
-        row["_mcsdr"] = res["mcsdr_edges"]
+        row["local_sim"] = res["local_sim"]
+        row["mcsdr"] = res["mcsdr_edges"]
         return row
 
 
@@ -55,8 +55,8 @@ class GLS(ResponseWorkflow):
         mpf = MPFilter(
             func, residue_counter=self.done_count,
             fields=[
-                {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
-                {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
+                {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
+                {"key": "local_sim", "name": "GLS", "d3_format": ".2f"}
             ]
         )
         molecule = AsyncMolecule()

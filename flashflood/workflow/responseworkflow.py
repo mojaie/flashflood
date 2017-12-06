@@ -44,17 +44,17 @@ class ResponseWorkflow(Workflow):
         super().on_submitted()
         # reorder fields
         fields = ListOfDict(self.results.fields)
-        fields.delete("key", "_molobj")
-        idx = fields.pick("key", "_index")
+        fields.delete("key", "__molobj")
+        idx = fields.pick("key", "index")
         if idx:
             self.fields.add(idx)
-        struct = fields.pick("key", "_structure")
+        struct = fields.pick("key", "structure")
         if struct:
             self.fields.add(struct)
         self.fields.merge(fields)
         # set hidden fields
         for f in self.fields:
-            if not f["key"].startswith("_"):
+            if f["key"].startswith("_"):
                 f["visible"] = False
 
     def progress(self):

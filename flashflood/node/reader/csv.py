@@ -38,6 +38,6 @@ class CSVFileReader(SyncNode):
         self._out_edge.records = self.reader()
         fnames, count = self.inspect()
         self._out_edge.fields.merge(
-            {"key": f, "name": f, "valueType": "text"} for f in fnames)
+            {"key": f, "name": f, "format": "text"} for f in fnames)
         self._out_edge.fields.merge(self.fields)
         self._out_edge.params.update(self.params)
