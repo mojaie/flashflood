@@ -10,10 +10,12 @@ from flashflood.node.function.apply import Apply
 
 
 def rename(updates, row):
-    new_row = row.copy()
-    for old, new in updates.items():
-        new_row[new] = new_row[old]
-        del new_row[old]
+    new_row = {}
+    for k, v in row.items():
+        if k in updates:
+            new_row[updates[k]] = v
+        else:
+            new_row[k] = v
     return new_row
 
 

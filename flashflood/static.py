@@ -38,8 +38,8 @@ def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
-INDEX_FIELD = {"key": "index", "name": "index", "d3_format": "d"}
-COMPID_FIELD = {"key": "compound_id", "name": "compound ID",
+INDEX_FIELD = {"key": "index", "name": "Index", "d3_format": "d"}
+COMPID_FIELD = {"key": "compound_id", "name": "Compound ID",
                 "format": "compound_id"}
 NAME_FIELD = {"key": "name", "name": "Name", "format": "text"}
 MOLOBJ_FIELD = {"key": "__molobj", "name": "Molecule object", "format": "json"}

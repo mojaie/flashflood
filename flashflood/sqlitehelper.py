@@ -53,7 +53,7 @@ class SQLiteHelper(object):
                 row = dict(res)
                 mol = Compound(pickle.loads(row["__molobj"]))
                 row["__molobj"] = json.dumps(mol.jsonized())
-                row["source"] = r
+                row["__source"] = r
                 yield row
 
     def search(self, rsrc_ids, key, value):
@@ -66,7 +66,7 @@ class SQLiteHelper(object):
                     if "__molobj" in row:
                         mol = Compound(pickle.loads(row["__molobj"]))
                         row["__molobj"] = json.dumps(mol.jsonized())
-                        row["source"] = r
+                        row["__source"] = r
                     return row
         rsrcs = filter(lambda x: x["id"] in rsrc_ids, SQLITE_RESOURCES)
         if any(r["domain"] == "chemical" for r in rsrcs):
@@ -92,7 +92,7 @@ class SQLiteHelper(object):
                 if "__molobj" in row:
                     mol = Compound(pickle.loads(row["__molobj"]))
                     row["__molobj"] = json.dumps(mol.jsonized())
-                    row["source"] = r
+                    row["__source"] = r
                 yield row
 
     def query_mol(self, query):
