@@ -16,12 +16,12 @@ from flashflood.node.function.apply import Apply, AsyncApply
 
 def chem_data(chem_calcs, pickle_mol, row):
     new_row = {}
-    mol = Compound(json.loads(row["_molobj"]))
+    mol = Compound(json.loads(row["__molobj"]))
     new_row.update(row)
     new_row.update({k: v(mol) for k, v in chem_calcs.items()})
     if pickle_mol:
-        new_row["_molobj"] = pickle.dumps(
-            json.loads(row["_molobj"]), protocol=4)
+        new_row["__molobj"] = pickle.dumps(
+            json.loads(row["__molobj"]), protocol=4)
     return new_row
 
 

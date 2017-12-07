@@ -14,8 +14,8 @@ def stack(row, keys, skip_none):
         if row[nk] is None and skip_none:
             continue
         d = {k: v for k, v in row.items() if k in keys}
-        d["_field"] = nk
-        d["_value"] = row[nk]
+        d["field"] = nk
+        d["value"] = row[nk]
         yield d
 
 
@@ -24,9 +24,10 @@ class Stack(SyncNode):
         super().__init__(params=params)
         self.keys = keys
         self.skip_none = skip_none
+        # TODO: set 'field' field key and 'value' field key
         self.fields = [
-            {"key": "_field", "name": "field", "format": "text"},
-            {"key": "_value", "name": "value", "format": "text"}
+            {"key": "field", "name": "field", "format": "text"},
+            {"key": "value", "name": "value", "format": "text"}
         ]
 
     def on_submitted(self):

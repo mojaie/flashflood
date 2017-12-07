@@ -26,7 +26,7 @@ class Number(SyncNode):
         super().__init__(params=params)
         self.counter = counter
         if name is None:
-            name = "_index"
+            name = "index"
         if fields is None:
             fields = [static.INDEX_FIELD]
         self.fields.merge(fields)
@@ -39,12 +39,12 @@ class Number(SyncNode):
 
 
 class AsyncNumber(AsyncNode):
-    def __init__(self, name="_index", counter=itertools.count,
+    def __init__(self, name="index", counter=itertools.count,
                  fields=None, params=None):
         super().__init__(params=params)
         self.counter = counter
         if name is None:
-            name = "_index"
+            name = "index"
         if fields is None:
             fields = [static.INDEX_FIELD]
         self.fields.merge(fields)

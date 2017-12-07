@@ -34,6 +34,7 @@ class Task(object):
         self.status = "ready"
         self.creation_time = time.time()
         self.start_time = None
+        self.finish_time = None
         self.fields = ListOfDict()
         self.params = {}
 

@@ -1,9 +1,9 @@
 package:
   name: flashflood
-  version: 0.8.4
+  version: 0.8.5
 
 source:
-  git_rev: v0.8.4
+  git_rev: v0.8.5
   git_url: ../
 
 requirements:

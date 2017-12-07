@@ -21,7 +21,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def mcsdr_filter(qmolarr, params, row):
-    mol = Compound(json.loads(row["_molobj"]))
+    mol = Compound(json.loads(row["__molobj"]))
     type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
     if len(mol) > params["molSizeCutoff"]:  # mol size filter
         return
@@ -38,25 +38,27 @@ def mcsdr_filter(qmolarr, params, row):
         return  # fragment size filter
     res = mcsdr.local_sim(arr, qmolarr)
     if res[type_[params["measure"]]] >= thld:
-        row["_local_sim"] = res["local_sim"]
-        row["_mcsdr"] = res["mcsdr_edges"]
+        row["local_sim"] = res["local_sim"]
+        row["mcsdr"] = res["mcsdr_edges"]
         return row
 
 
 class GLS(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        self.fields.extend([
-            {"key": "_mcsdr", "name": "MCS-DR size", "d3_format": "d"},
-            {"key": "_local_sim", "name": "GLS", "d3_format": ".2f"}
-        ])
         qmol = sq.query_mol(query["queryMol"])
         qmolarr = mcsdr.comparison_array(
             qmol, query["params"]["diameter"], query["params"]["maxTreeSize"])
         func = functools.partial(mcsdr_filter, qmolarr, query["params"])
         self.append(SQLiteReader(query))
         self.append(CountRows(self.input_size))
-        self.append(MPFilter(func, residue_counter=self.done_count))
+        self.append(MPFilter(
+            func, residue_counter=self.done_count,
+            fields=[
+                {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
+                {"key": "local_sim", "name": "GLS", "d3_format": ".2f"}
+            ]
+        )）
         self.append(AsyncMolecule())
         self.append(AsyncNumber())
         self.append(AsyncCountRows(self.done_count))

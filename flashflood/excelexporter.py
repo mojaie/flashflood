@@ -54,7 +54,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
         sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", table["name"])
         sheet = wb.add_worksheet(sheet_name)
         # TODO: appropriate row height
-        struct = LOD(table["fields"]).find("key", "_structure")
+        struct = LOD(table["fields"]).find("key", "structure")
         if struct is not None and struct["visible"]:
             sheet.set_default_row(opts["struct_row_height"])
         else:
@@ -67,8 +67,8 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
             sheet.write(0, i, col["name"], text_format)
             col_width = [opts["default_col_width"]]
             for j, row in enumerate(table["records"]):
-                if col["key"] == "_structure":  # Chemical structure SVG field
-                    mol = Compound(json.loads(row["_molobj"]))
+                if col["key"] == "structure":  # Chemical structure SVG field
+                    mol = Compound(json.loads(row["__molobj"]))
                     mpl = Matplotlib(mol)
                     size = opts["struct_row_height"] - opts[
                         "img_options"]["y_offset"] * 2
@@ -83,7 +83,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
                     # a 1.33 is pixel/point conversion factor
                     # a 8.43 is pixel/character width conversion factor
                     # +3 for a bug in image placement of Mac Excel
-                elif col.get("valueType") == "image":
+                elif col.get("format") == "image":
                     data = row.get(col["key"], "")
                     if not data:
                         continue

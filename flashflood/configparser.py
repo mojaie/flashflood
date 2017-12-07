@@ -49,7 +49,7 @@ def schema():
             fields = ListOfDict(rsrc["fields"])
             if rsrc["domain"] == "chemical":
                 fields.merge(static.CHEM_FIELDS)
-                fields.delete("key", "_molobj")
+                fields.delete("key", "__molobj")
             rsrc["fields"] = fields
         resources.extend(data["resources"])
     # API schema
