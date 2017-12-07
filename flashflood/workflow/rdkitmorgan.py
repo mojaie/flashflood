@@ -23,7 +23,7 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 def rdmorgan_filter(qmol, params, row):
     mol = Compound(json.loads(row["__molobj"]))
     try:
-        score = rdkit.morgan_sim(mol, qmol, 4)
+        score = rdkit.morgan_sim(mol, qmol, radius=2)  # ECFP4 equivalent
     except:
         print(traceback.format_exc())
         return
