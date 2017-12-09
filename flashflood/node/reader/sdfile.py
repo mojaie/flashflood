@@ -4,8 +4,6 @@
 # http://opensource.org/licenses/MIT
 #
 
-import json
-
 from chorus import v2000reader  # , v2000writer
 from chorus import molutil
 from chorus.draw import calc2dcoords
@@ -34,7 +32,7 @@ class SDFileReaderBase(SyncNode):
                 mol = molutil.make_Hs_implicit(mol)
             if self.recalc_coords:
                 calc2dcoords.calc2dcoords(mol)
-            row["__molobj"] = json.dumps(mol.jsonized())
+            row["__molobj"] = mol
             for op in self.sdf_options:
                 row[op] = mol.data.get(op, "")
             yield row

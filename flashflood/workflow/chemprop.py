@@ -5,15 +5,13 @@
 #
 
 import functools
-import json
 import operator
 import re
 
-from chorus.model.graphmol import Compound
-
 from flashflood import static
+from flashflood.node.chem.descriptor import AsyncMolDescriptor
+from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
 from flashflood.node.function.filter import MPFilter
-from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
 from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
@@ -34,9 +32,8 @@ OPERATORS = {
 
 
 def prop_filter(func, op, val, row):
-    mol = Compound(json.loads(row["__molobj"]))
     try:
-        valid = op(func(mol), val)
+        valid = op(func(row["__molobj"]), val)
     except TypeError as e:
         print(e, row["compound_id"], val)
     else:
@@ -47,22 +44,23 @@ def prop_filter(func, op, val, row):
 class ChemProp(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
-        field = static.CHEM_FIELDS.find("key", query["key"])
-        if "d3_format" in field or field["format"] == "numeric":
+        desc = static.MOL_DESCS[query["key"]]
+        if desc.format_type == "d3_format" or desc.format == "numeric":
             vs = [float(v) for v in query["values"]]
         else:
             vs = query["values"]
         # TODO Is "IN" query necessary?
         v = {True: vs, False: vs[0]}[query["operator"] == "in"]
         func = functools.partial(
-            prop_filter,
-            static.CHEM_FUNCTIONS[query["key"]],
+            prop_filter, desc.function,
             OPERATORS[query["operator"]], v
         )
         self.append(SQLiteReader(query))
         self.append(CountRows(self.input_size))
+        self.append(UnpickleMolecule())
         self.append(MPFilter(func, residue_counter=self.done_count))
-        self.append(AsyncMolecule())
+        self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
+        self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber())
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))

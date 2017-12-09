@@ -5,14 +5,14 @@
 #
 
 import functools
-import json
 import traceback
 
 from chorus import rdkit
-from chorus.model.graphmol import Compound
 
+from flashflood import static
+from flashflood.node.chem.descriptor import AsyncMolDescriptor
+from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
 from flashflood.node.function.filter import MPFilter
-from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
 from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
@@ -22,10 +22,9 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def rdfmcs_filter(qmol, params, row):
-    mol = Compound(json.loads(row["__molobj"]))
     type_ = {"sim": "similarity", "edge": "mcs_edges"}
     try:
-        res = rdkit.fmcs(mol, qmol, timeout=params["timeout"])
+        res = rdkit.fmcs(row["__molobj"], qmol, timeout=params["timeout"])
     except:
         print(traceback.format_exc())
         return
@@ -47,8 +46,10 @@ class RDKitFMCS(ResponseWorkflow):
         func = functools.partial(rdfmcs_filter, qmol, query["params"])
         self.append(SQLiteReader(query))
         self.append(CountRows(self.input_size))
+        self.append(UnpickleMolecule())
         self.append(MPFilter(func, residue_counter=self.done_count))
-        self.append(AsyncMolecule())
+        self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
+        self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber())
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))

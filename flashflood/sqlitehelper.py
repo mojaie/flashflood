@@ -4,11 +4,10 @@
 # http://opensource.org/licenses/MIT
 #
 
-import json
-import os
 import pickle
+import os
 
-from chorus import molutil, smilessupplier, v2000reader
+from chorus import smilessupplier, v2000reader
 from chorus.draw import calc2dcoords
 from chorus.model.graphmol import Compound
 
@@ -51,8 +50,6 @@ class SQLiteHelper(object):
         for r, tbl, conn in self.origins_iter(rsrc_ids):
             for res in conn.rows_iter(tbl):
                 row = dict(res)
-                mol = Compound(pickle.loads(row["__molobj"]))
-                row["__molobj"] = json.dumps(mol.jsonized())
                 row["__source"] = r
                 yield row
 
@@ -63,19 +60,9 @@ class SQLiteHelper(object):
                 res = conn.find_first(key, (value,), tbl)
                 if res is not None:
                     row = dict(res)
-                    if "__molobj" in row:
-                        mol = Compound(pickle.loads(row["__molobj"]))
-                        row["__molobj"] = json.dumps(mol.jsonized())
-                        row["__source"] = r
+                    row["__source"] = r
                     return row
-        rsrcs = filter(lambda x: x["id"] in rsrc_ids, SQLITE_RESOURCES)
-        if any(r["domain"] == "chemical" for r in rsrcs):
-            null_record = {key: value}
-            null_record["__molobj"] = json.dumps(
-                molutil.null_molecule().jsonized())
-            return null_record
-        else:
-            return {key: value}
+        return {key: value}
 
     def find_all(self, rsrc_ids, key, values, op, fields=None):
         op = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
@@ -89,10 +76,7 @@ class SQLiteHelper(object):
                     row = dict(res)
                 else:
                     row = {f: res[f] for f in fields if f in res.keys()}
-                if "__molobj" in row:
-                    mol = Compound(pickle.loads(row["__molobj"]))
-                    row["__molobj"] = json.dumps(mol.jsonized())
-                    row["__source"] = r
+                row["__source"] = r
                 yield row
 
     def query_mol(self, query):
@@ -112,7 +96,7 @@ class SQLiteHelper(object):
                 (query["source"],), "compound_id", query["value"])
             if res is None:
                 raise ValueError()
-            qmol = Compound(json.loads(res["__molobj"]))
+            qmol = Compound(pickle.loads(res["__molpickle"]))
         return qmol
 
 

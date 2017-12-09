@@ -5,13 +5,13 @@
 #
 
 import functools
-import json
 
 from chorus import mcsdr
 from chorus import molutil
 from chorus import rdkit
-from chorus.model.graphmol import Compound
 
+from flashflood.core.node import FunctionNode
+from flashflood.node.chem.molecule import MoleculeFromJSON
 from flashflood.node.function.filter import MPFilter
 from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.iterator import IteratorInput
@@ -71,9 +71,10 @@ def fmcs_filter(params, pair):
 
 
 def gls_array(params, rcd):
-    mol = Compound(json.loads(rcd["__molobj"]))
     if params["ignoreHs"]:
-        mol = molutil.make_Hs_implicit(mol)
+        mol = molutil.make_Hs_implicit(rcd["__molobj"])
+    else:
+        mol = rcd["__molobj"]
     diam = int(params["diameter"])
     tree = int(params["maxTreeSize"])
     arr = mcsdr.comparison_array(mol, diam, tree)
@@ -81,9 +82,10 @@ def gls_array(params, rcd):
 
 
 def rdkit_mol(params, rcd):
-    mol = Compound(json.loads(rcd["__molobj"]))
     if params["ignoreHs"]:
-        mol = molutil.make_Hs_implicit(mol)
+        mol = molutil.make_Hs_implicit(rcd["__molobj"])
+    else:
+        mol = rcd["__molobj"]
     return {"index": rcd["index"], "mol": mol}
 
 
@@ -92,14 +94,15 @@ class GLSNetwork(ResponseWorkflow):
         super().__init__(params, **kwargs)
         self.data_type = "edges"
         self.reference["nodes"] = contents["id"]
-        self.fields.merge(GRAPH_FIELDS)
-        arrgen = functools.partial(gls_array, params)
-        arrs = map(arrgen, contents["records"])
-        filter_ = functools.partial(gls_filter, params)
-        self.append(IteratorInput(arrs))
+        self.append(IteratorInput(contents["records"]))
+        self.append(MoleculeFromJSON())
+        self.append(FunctionNode(functools.partial(gls_array, params)))
         self.append(Combination())
         self.append(CountRows(self.input_size))
-        self.append(MPFilter(filter_, residue_counter=self.done_count))
+        self.append(MPFilter(
+            functools.partial(gls_filter, params),
+            residue_counter=self.done_count, fields=GRAPH_FIELDS
+        ))
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))
 
@@ -109,13 +112,15 @@ class RDKitMorganNetwork(ResponseWorkflow):
         super().__init__(params, **kwargs)
         self.data_type = "edges"
         self.reference["nodes"] = contents["id"]
-        self.fields.merge(GRAPH_FIELDS)
-        mols = map(functools.partial(rdkit_mol, params), contents["records"])
-        filter_ = functools.partial(morgan_filter, params)
-        self.append(IteratorInput(mols))
+        self.append(IteratorInput(contents["records"]))
+        self.append(MoleculeFromJSON())
+        self.append(Apply(functools.partial(rdkit_mol, params)))
         self.append(Combination())
         self.append(CountRows(self.input_size))
-        self.append(MPFilter(filter_, residue_counter=self.done_count))
+        self.append(MPFilter(
+            functools.partial(morgan_filter, params),
+            residue_counter=self.done_count, fields=GRAPH_FIELDS
+        ))
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))
 
@@ -125,12 +130,14 @@ class RDKitFMCSNetwork(ResponseWorkflow):
         super().__init__(params, **kwargs)
         self.data_type = "edges"
         self.reference["nodes"] = contents["id"]
-        self.fields.merge(GRAPH_FIELDS)
-        mols = map(functools.partial(rdkit_mol, params), contents["records"])
-        filter_ = functools.partial(fmcs_filter, params)
-        self.append(IteratorInput(mols))
+        self.append(IteratorInput(contents["records"]))
+        self.append(MoleculeFromJSON())
+        self.append(Apply(functools.partial(rdkit_mol, params)))
         self.append(Combination())
         self.append(CountRows(self.input_size))
-        self.append(MPFilter(filter_, residue_counter=self.done_count))
+        self.append(MPFilter(
+            functools.partial(fmcs_filter, params),
+            residue_counter=self.done_count, fields=GRAPH_FIELDS
+        ))
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))

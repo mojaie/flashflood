@@ -9,28 +9,26 @@ import os
 import sqlite3
 import traceback
 
+from flashflood.core.edge import FunctionEdge
 from flashflood.core.node import Node
 from flashflood.util import debug
 
 
 # TODO: move to static
 data_type = {
+    "numeric": "real",
     "id": "text",
     "compound_id": "text",
     "assay_id": "text",
+    "data_id": "text",
     "svg": "text",
     "json": "text",
     "plot": "text",
     "text": "text",
-    "ec50": "real",
-    "active%": "real",
-    "inhibition%": "real",
-    "numeric": "real",
-    "count": "integer",
-    "int": "integer",
-    "flag": "integer",
-    "bool": "integer",
-    "image": "blob"
+    "pickle": "blob",
+    "pyobject": "blob",
+    "image": "blob",
+    "binary": "blob"
 }
 
 
@@ -86,7 +84,10 @@ class SQLiteWriter(Node):
                 table_name = in_edge.params["table"]
                 for field in in_edge.fields:
                     fieldphrase = field["key"]
-                    sqtype = data_type.get(field.get("format"), "text")
+                    if "d3_format" in field:
+                        sqtype = "real"
+                    else:
+                        sqtype = data_type.get(field["format"], "blob")
                     fieldphrase += " {}".format(sqtype)
                     if self.primary_key is not None and \
                             field["key"] == self.primary_key:
@@ -99,7 +100,11 @@ class SQLiteWriter(Node):
                 sql = "CREATE TABLE {}({})".format(table_name, fielddef)
                 cur.execute(sql)
                 # Insert records
-                for i, rcd in enumerate(in_edge.records):
+                if isinstance(in_edge, FunctionEdge):
+                    records = map(in_edge.func, in_edge.records)
+                else:
+                    records = in_edge.records
+                for i, rcd in enumerate(records):
                     fieldkeys = ", ".join(rcd.keys())
                     sql = "INSERT INTO {}({})".format(table_name, fieldkeys)
                     placeholders = ", ".join(["?"] * len(rcd))

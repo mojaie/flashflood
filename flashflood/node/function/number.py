@@ -10,6 +10,7 @@ import itertools
 from tornado import gen
 
 from flashflood import static
+from flashflood.core.edge import Edge, FunctionEdge
 from flashflood.core.node import SyncNode, AsyncNode
 
 
@@ -34,8 +35,13 @@ class Number(SyncNode):
 
     def on_submitted(self):
         super().on_submitted()
-        zipped = zip(self._in_edge.records, self.counter())
-        self._out_edge.records = map(self.func, zipped)
+        if isinstance(self._in_edge, Edge):
+            rcds = self._in_edge.records
+        elif isinstance(self._in_edge, FunctionEdge):
+            rcds = map(self._in_edge.func, self._in_edge.records)
+        else:
+            raise ValueError("Invalid upstream edge.")
+        self._out_edge.records = map(self.func, zip(rcds, self.counter()))
 
 
 class AsyncNumber(AsyncNode):

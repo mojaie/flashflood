@@ -7,7 +7,7 @@
 import functools
 
 
-def _identity(x):
+def identity(x):
     return x
 
 
@@ -21,4 +21,4 @@ def _compose2(f, g):
 
 def compose(*funcs):
     """Function composition"""
-    return functools.reduce(_compose2, funcs, _identity)
+    return functools.reduce(_compose2, funcs, identity)

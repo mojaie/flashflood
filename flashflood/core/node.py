@@ -53,10 +53,16 @@ class SyncNode(Node):
         super().__init__(params=params)
         self._out_edge = Edge()
 
-    # Set records to the downstream
-    # def on_submitted(self):
-    #     super().on_submitted()
-    #     # self._out_edge.records = self._in_edge.records
+    def on_submitted(self):
+        super().on_submitted()
+        if isinstance(self._in_edge, Edge):
+            pass
+            # self._out_edge.records = self._in_edge.records
+        elif isinstance(self._in_edge, FunctionEdge):
+            self._out_edge.records = map(
+                self._in_edge.func, self._in_edge.records)
+        else:
+            raise ValueError("Invalid upstream edge.")
 
 
 class FunctionNode(Node):
@@ -73,35 +79,15 @@ class FunctionNode(Node):
 
     def on_submitted(self):
         super().on_submitted()
-        if isinstance(self._in_edge, FunctionEdge):
-            self._out_edge.func = functional.compose(
-                self._in_edge.func, self.func)
-        else:
+        if isinstance(self._in_edge, Edge):
             self._out_edge.func = self.func
-        self._out_edge.records = self._in_edge.records
-
-
-class Apply(Node):
-    """
-    Parameters:
-      status: str
-        ready: ready to run
-        done: finished and put all results to outgoing edges
-    """
-    def __init__(self, func=None, params=None):
-        super().__init__(params=params)
-        self.func = func
-        self._out_edge = Edge()
-
-    def on_submitted(self):
-        super().on_submitted()
-        if isinstance(self._in_edge, FunctionEdge) and self.func:
-            func = functional.compose(self._in_edge.func, self.func)
+            self._out_edge.records = self._in_edge.records
         elif isinstance(self._in_edge, FunctionEdge):
-            func = self._in_edge.func
-        elif self.func:
-            func = self.func
-        self._out_edge.records = map(func, self._in_edge.records)
+            self._out_edge.func = functional.compose(
+                self.func, self._in_edge.func)
+            self._out_edge.records = self._in_edge.records
+        else:
+            raise ValueError("Invalid upstream edge.")
 
 
 class AsyncNode(Node):

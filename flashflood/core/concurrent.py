@@ -5,7 +5,7 @@
 #
 
 from concurrent import futures as cf
-import threading
+# import threading
 
 from tornado import gen
 from tornado.queues import Queue
@@ -71,8 +71,7 @@ class ConcurrentSubWorkflow(SubWorkflow):
 
     @gen.coroutine
     def on_task_done(self, record):
-        if record:
-            yield self._out_edge.put(record)
+        yield self._out_edge.put(record)
 
     @gen.coroutine
     def on_finish(self):
@@ -89,8 +88,9 @@ class ConcurrentSubWorkflow(SubWorkflow):
         while True:
             f = yield self._queue.get()
             res = yield f
-            with threading.Lock():
-                self.on_task_done(res)
+            # TODO: threading.Lock may be unnecessary
+            # with threading.Lock():
+            self.on_task_done(res)
             self._queue.task_done()
 
     @gen.coroutine
@@ -98,3 +98,16 @@ class ConcurrentSubWorkflow(SubWorkflow):
         self.status = "interrupted"
         while self.status != "aborted":
             yield gen.sleep(self.interval)
+
+
+class ConcurrentFilterSubWorkflow(ConcurrentSubWorkflow):
+    def __init__(self, residue_counter=None, params=None, verbose=False):
+        super().__init__(params=params, verbose=verbose)
+        self.residue_counter = residue_counter
+
+    @gen.coroutine
+    def on_task_done(self, record):
+        if record:
+            yield self._out_edge.put(record)
+        elif self.residue_counter is not None:
+            self.residue_counter += 1

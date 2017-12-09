@@ -5,13 +5,13 @@
 #
 
 import functools
-import json
 
 from chorus import mcsdr
-from chorus.model.graphmol import Compound
 
+from flashflood import static
+from flashflood.node.chem.descriptor import AsyncMolDescriptor
+from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
 from flashflood.node.function.filter import MPFilter
-from flashflood.node.chem.molecule import AsyncMolecule
 from flashflood.node.function.number import AsyncNumber
 from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
@@ -21,13 +21,12 @@ from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def mcsdr_filter(qmolarr, params, row):
-    mol = Compound(json.loads(row["__molobj"]))
     type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
-    if len(mol) > params["molSizeCutoff"]:  # mol size filter
+    if len(row["__molobj"]) > params["molSizeCutoff"]:  # mol size filter
         return
     try:
         arr = mcsdr.comparison_array(
-            mol, params["diameter"], params["maxTreeSize"])
+            row["__molobj"], params["diameter"], params["maxTreeSize"])
     except ValueError:
         return
     sm, bg = sorted([arr[1], qmolarr[1]])
@@ -52,14 +51,16 @@ class GLS(ResponseWorkflow):
         func = functools.partial(mcsdr_filter, qmolarr, query["params"])
         self.append(SQLiteReader(query))
         self.append(CountRows(self.input_size))
+        self.append(UnpickleMolecule())
         self.append(MPFilter(
             func, residue_counter=self.done_count,
             fields=[
                 {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
                 {"key": "local_sim", "name": "GLS", "d3_format": ".2f"}
             ]
-        )）
-        self.append(AsyncMolecule())
+        ))
+        self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
+        self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber())
         self.append(AsyncCountRows(self.done_count))
         self.append(AsyncContainerWriter(self.results))

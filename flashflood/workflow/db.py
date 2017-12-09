@@ -4,7 +4,9 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.node.chem.molecule import Molecule
+from flashflood import static
+from flashflood.node.chem.descriptor import MolDescriptor
+from flashflood.node.chem.molecule import MoleculeToJSON, UnpickleMolecule
 from flashflood.node.function.number import Number
 from flashflood.node.reader import sqlite
 from flashflood.node.writer.container import ContainerWriter
@@ -31,7 +33,9 @@ class ChemDBFilter(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
         self.append(sqlite.SQLiteReaderFilter(query))
-        self.append(Molecule())
+        self.append(UnpickleMolecule())
+        self.append(MolDescriptor(static.MOL_DESC_KEYS))
+        self.append(MoleculeToJSON())
         self.append(Number())
         self.append(ContainerWriter(self.results))
 
@@ -40,6 +44,8 @@ class ChemDBSearch(ResponseWorkflow):
     def __init__(self, query, **kwargs):
         super().__init__(query, **kwargs)
         self.append(sqlite.SQLiteReaderSearch(query))
-        self.append(Molecule())
+        self.append(UnpickleMolecule())
+        self.append(MolDescriptor(static.MOL_DESC_KEYS))
+        self.append(MoleculeToJSON())
         self.append(Number())
         self.append(ContainerWriter(self.results))

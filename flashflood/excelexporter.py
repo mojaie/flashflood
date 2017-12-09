@@ -68,7 +68,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
             col_width = [opts["default_col_width"]]
             for j, row in enumerate(table["records"]):
                 if col["key"] == "structure":  # Chemical structure SVG field
-                    mol = Compound(json.loads(row["__molobj"]))
+                    mol = Compound(json.loads(row["__moljson"]))
                     mpl = Matplotlib(mol)
                     size = opts["struct_row_height"] - opts[
                         "img_options"]["y_offset"] * 2

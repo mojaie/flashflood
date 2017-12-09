@@ -7,6 +7,7 @@
 import itertools
 from tornado import gen
 
+from flashflood.core.edge import Edge, FunctionEdge
 from flashflood.core.node import SyncNode, AsyncNode
 
 
@@ -14,12 +15,19 @@ class CountRows(SyncNode):
     def __init__(self, container, params=None):
         super().__init__(params=params)
         self.container = container
+        self.counter = None
+
+    def on_submitted(self):
+        super().on_submitted()
+        if isinstance(self._in_edge, Edge):
+            rcds = self._in_edge.records
+        elif isinstance(self._in_edge, FunctionEdge):
+            rcds = map(self._in_edge.func, self._in_edge.records)
+        self.counter, self._out_edge.records = itertools.tee(rcds)
 
     def run(self):
         self.on_start()
-        counter, main = itertools.tee(self._in_edge.records)
-        self.container.value += sum(1 for _ in counter)
-        self._out_edge.records = main
+        self.container.value += sum(1 for _ in self.counter)
         self.on_finish()
 
 

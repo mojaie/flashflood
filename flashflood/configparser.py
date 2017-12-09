@@ -48,7 +48,7 @@ def schema():
             rsrc["resourceFile"] = data["resourceFile"]
             fields = ListOfDict(rsrc["fields"])
             if rsrc["domain"] == "chemical":
-                fields.merge(static.CHEM_FIELDS)
+                fields.merge(static.MOL_DESC_FIELDS)
                 fields.delete("key", "__molobj")
             rsrc["fields"] = fields
         resources.extend(data["resources"])

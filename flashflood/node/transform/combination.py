@@ -6,6 +6,7 @@
 
 import itertools
 
+from flashflood.core.edge import Edge, FunctionEdge
 from flashflood.core.node import SyncNode
 
 
@@ -15,8 +16,11 @@ class Combination(SyncNode):
         self.r = r
 
     def on_submitted(self):
-        comb = itertools.combinations(self._in_edge.records, self.r)
-        self._out_edge.records = comb
-        self._out_edge.fields.merge(self._in_edge.fields)
-        self._out_edge.params.update(self._in_edge.params)
-        self._out_edge.params.update(self.params)
+        super().on_submitted()
+        if isinstance(self._in_edge, Edge):
+            rcds = self._in_edge.records
+        elif isinstance(self._in_edge, FunctionEdge):
+            rcds = map(self._in_edge.func, self._in_edge.records)
+        else:
+            raise ValueError("Invalid upstream edge.")
+        self._out_edge.records = itertools.combinations(rcds, self.r)

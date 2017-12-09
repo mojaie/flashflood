@@ -8,8 +8,9 @@ import itertools
 
 from tornado import gen
 
-from flashflood.core.task import MPWorker
+from flashflood.core.edge import Edge, FunctionEdge
 from flashflood.core.node import SyncNode, Asynchronizer
+from flashflood.core.task import MPWorker
 
 
 class Filter(SyncNode):
@@ -66,11 +67,16 @@ class MPFilter(Asynchronizer):
         if fields is not None:
             self.fields.merge(fields)
         self.residue_counter = residue_counter
+        self.records = None
 
     @gen.coroutine
     def run(self):
         self.on_start()
-        self.worker = MPNodeWorker(self._in_edge.records, self.func, self)
+        if isinstance(self._in_edge, Edge):
+            rcds = self._in_edge.records
+        elif isinstance(self._in_edge, FunctionEdge):
+            rcds = map(self._in_edge.func, self._in_edge.records)
+        self.worker = MPNodeWorker(rcds, self.func, self)
         yield self.worker.run()
 
     @gen.coroutine

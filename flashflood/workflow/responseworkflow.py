@@ -44,7 +44,7 @@ class ResponseWorkflow(Workflow):
         super().on_submitted()
         # reorder fields
         fields = ListOfDict(self.results.fields)
-        fields.delete("key", "__molobj")
+        fields.delete("key", "__moljson")
         idx = fields.pick("key", "index")
         if idx:
             self.fields.add(idx)
