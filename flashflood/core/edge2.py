@@ -7,6 +7,7 @@
 from tornado import gen
 from tornado.queues import Queue
 
+from flashflood import functional
 from flashflood.lod import ListOfDict
 
 
@@ -18,10 +19,16 @@ class IterEdge(object):
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
     """
-    def __init__(self):
+    def __init__(self, sampler=None):
         self.records = []
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
+
+    def sample(self):
+        if self.sampler is not None:
+            self.records = list(self.records)
+            self.sampler.put_from_list(self.records)
 
 
 class FuncEdge(object):
@@ -33,11 +40,18 @@ class FuncEdge(object):
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
     """
-    def __init__(self):
+    def __init__(self, sampler=None):
         self.func = None
         self.records = []
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
+
+    def sample(self):
+        if self.sampler is not None:
+            self.records = list(map(self.func, self.records))
+            self.func = functional.identity
+            self.sampler.put_from_list(self.records)
 
 
 class AsyncEdge(object):
@@ -59,17 +73,20 @@ class AsyncEdge(object):
           in the edge is sent to the target node
 
     """
-    def __init__(self):
+    def __init__(self, sampler=None):
         self.queue = Queue(20)
         self.status = "ready"
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
 
     @gen.coroutine
     def put(self, record):
         """Puts a record to the queue.
 
         This should be called by an upstream node."""
+        if self.sampler is not None:
+            self.sampler.put(record)
         yield self.queue.put(record)
 
     @gen.coroutine

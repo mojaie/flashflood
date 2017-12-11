@@ -12,7 +12,7 @@ from flashflood.core.node2 import IterNode
 
 class ContainerWriter(IterNode):
     def __init__(self, container, params=None):
-        super().__init__(params=params)
+        super().__init__(params=params, sampler=None)
         self.container = container
 
     def on_submitted(self):
@@ -20,12 +20,10 @@ class ContainerWriter(IterNode):
         self.update_params()
 
     def merge_fields(self):
-        self.container.fields = ListOfDict()
         self.container.fields.merge(self._in_edge.fields)
         self.container.fields.merge(self.fields)
 
     def update_params(self):
-        self.container.params = {}
         self.container.params.update(self._in_edge.params)
         self.container.params.update(self.params)
 
@@ -56,7 +54,6 @@ class ContainerWriter(IterNode):
     @gen.coroutine
     def synchronizer(self):
         """AsyncEdge -> IterEdge, FuncEdge"""
-        self.container.records = []
         while 1:
             in_ = yield self._in_edge.get()
             self.container.records.append(in_)

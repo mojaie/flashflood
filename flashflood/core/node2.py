@@ -54,9 +54,9 @@ class Node(Task):
 
 
 class IterNode(Node):
-    def __init__(self, params=None):
+    def __init__(self, params=None, sampler=None):
         super().__init__(params=params)
-        self._out_edge = IterEdge()
+        self._out_edge = IterEdge(sampler)
 
     def on_submitted(self):
         if self.in_edge_type() == "IterEdge":
@@ -70,15 +70,18 @@ class IterNode(Node):
     def run(self):
         self.on_start()
         if self.in_edge_type() != "AsyncEdge":
+            self._out_edge.sample()
             self.on_finish()
             return
         self.synchronizer()
         while 1:
             if self._in_edge.status == "aborted":
+                self._out_edge.sample()
                 self._out_edge.status = "aborted"
                 self.on_aborted()
                 break
             if self._in_edge.status == "done":
+                self._out_edge.sample()
                 self._out_edge.status = "done"
                 self.on_finish()
                 break
@@ -101,9 +104,9 @@ class IterNode(Node):
 
 
 class FuncNode(Node):
-    def __init__(self, func, params=None):
+    def __init__(self, func, params=None, sampler=None):
         super().__init__(params=params)
-        self._out_edge = FuncEdge()
+        self._out_edge = FuncEdge(sampler)
         self.func = func
         # TODO: pickle test
 
@@ -119,15 +122,18 @@ class FuncNode(Node):
     def run(self):
         self.on_start()
         if self.in_edge_type() != "AsyncEdge":
+            self._out_edge.sample()
             self.on_finish()
             return
         self.synchronizer()
         while 1:
             if self._in_edge.status == "aborted":
+                self._out_edge.sample()
                 self._out_edge.status = "aborted"
                 self.on_aborted()
                 break
             if self._in_edge.status == "done":
+                self._out_edge.sample()
                 self._out_edge.status = "done"
                 self.on_finish()
                 break
@@ -153,9 +159,9 @@ class FuncNode(Node):
 
 
 class AsyncNode(Node):
-    def __init__(self, params=None):
+    def __init__(self, params=None, sampler=None):
         super().__init__(params=params)
-        self._out_edge = AsyncEdge()
+        self._out_edge = AsyncEdge(sampler)
 
     def on_submitted(self):
         self.merge_fields()
