@@ -14,53 +14,43 @@ from chorus.model.graphmol import Compound
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.container import Container
+from flashflood.core.task import Task
+from flashflood.core.workflow import Workflow
 from flashflood.node.chem.molecule import MoleculeToJSON, PickleMolecule
-from flashflood.node.reader.iterator import IteratorInput
+from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.writer.container import ContainerWriter
 
 
 class TestMolecule(AsyncTestCase):
     @gen_test
     def test_moltojson(self):
+        wf = Workflow()
+        wf.interval = 0.01
         result = Container()
-        iter_in = IteratorInput(
-            [{"__molobj": reader.mol_from_text(MOL["demo"])}])
-        mol = MoleculeToJSON()
-        self.assertIsInstance(pickle.dumps(mol.func), bytes)
-        out = ContainerWriter(result)
-        mol.add_in_edge(iter_in.out_edge(0), 0)
-        out.add_in_edge(mol.out_edge(0), 0)
-        iter_in.on_submitted()
-        mol.on_submitted()
-        out.on_submitted()
-        iter_in.run()
-        mol.run()
-        yield out.run()
+        wf.append(IterInput(
+            [{"__molobj": reader.mol_from_text(MOL["demo"])}]))
+        wf.append(MoleculeToJSON())
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
         rcd = result.records[0]
         out = Compound(json.loads(rcd["__moljson"]))
         self.assertEqual(len(out), 37)
-        self.assertEqual(mol.status, "done")
 
     @gen_test
     def test_picklemol(self):
+        wf = Workflow()
+        wf.interval = 0.01
         result = Container()
-        iter_in = IteratorInput(
-            [{"__molobj": reader.mol_from_text(MOL["demo"])}])
-        mol = PickleMolecule()
-        self.assertIsInstance(pickle.dumps(mol.func), bytes)
-        out = ContainerWriter(result)
-        mol.add_in_edge(iter_in.out_edge(0), 0)
-        out.add_in_edge(mol.out_edge(0), 0)
-        iter_in.on_submitted()
-        mol.on_submitted()
-        out.on_submitted()
-        iter_in.run()
-        mol.run()
-        yield out.run()
+        wf.append(IterInput(
+            [{"__molobj": reader.mol_from_text(MOL["demo"])}]))
+        wf.append(PickleMolecule())
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
         rcd = result.records[0]
         out = Compound(pickle.loads(rcd["__molpickle"]))
         self.assertEqual(len(out), 37)
-        self.assertEqual(mol.status, "done")
 
 
 if __name__ == '__main__':

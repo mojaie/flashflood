@@ -31,38 +31,38 @@ def unpickle_mol(p):
 
 
 class MoleculeToJSON(Extend):
-    def __init__(self, in_place=True, params=None):
+    def __init__(self, in_place=True, **kwargs):
         super().__init__("__moljson", "__molobj", func=jsonize,
                          in_place=in_place,
                          fill=json.dumps(molutil.null_molecule().jsonized()),
-                         fields=[static.MOLJSON_FIELD], params=params)
+                         fields=[static.MOLJSON_FIELD], **kwargs)
 
 
 class AsyncMoleculeToJSON(AsyncExtend):
-    def __init__(self, in_place=True, params=None):
+    def __init__(self, in_place=True, **kwargs):
         super().__init__("__moljson", "__molobj", func=jsonize,
                          in_place=in_place,
                          fill=json.dumps(molutil.null_molecule().jsonized()),
-                         fields=[static.MOLJSON_FIELD], params=params)
+                         fields=[static.MOLJSON_FIELD], **kwargs)
 
 
 class MoleculeFromJSON(Extend):
-    def __init__(self, in_place=True, params=None):
+    def __init__(self, in_place=True, **kwargs):
         super().__init__("__molobj", "__moljson", func=mol_from_json,
                          in_place=in_place, fill=molutil.null_molecule(),
-                         fields=[static.MOLOBJ_FIELD], params=params)
+                         fields=[static.MOLOBJ_FIELD], **kwargs)
 
 
 class PickleMolecule(Extend):
-    def __init__(self, in_place=True, params=None):
+    def __init__(self, in_place=True, **kwargs):
         super().__init__(
             "__molpickle", "__molobj", func=pickle_mol, in_place=in_place,
             fill=pickle.dumps(molutil.null_molecule().jsonized(), protocol=4),
-            fields=[static.MOLPICKLE_FIELD], params=params)
+            fields=[static.MOLPICKLE_FIELD], **kwargs)
 
 
 class UnpickleMolecule(Extend):
-    def __init__(self, in_place=True, params=None):
+    def __init__(self, in_place=True, **kwargs):
         super().__init__("__molobj", "__molpickle", func=unpickle_mol,
                          in_place=in_place, fill=molutil.null_molecule(),
-                         fields=[static.MOLOBJ_FIELD], params=params)
+                         fields=[static.MOLOBJ_FIELD], **kwargs)

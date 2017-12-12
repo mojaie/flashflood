@@ -9,8 +9,12 @@ import unittest
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.lod import ListOfDict
-from flashflood.node.reader.iterator import IteratorInput
+from flashflood.core.container import Container
+from flashflood.core.task import Task
+from flashflood.core.workflow import Workflow
 from flashflood.node.aggregate.update import AggUpdate
+from flashflood.node.reader.iterinput import IterInput
+from flashflood.node.writer.container import ContainerWriter
 
 
 RECORDS = [
@@ -27,14 +31,15 @@ RECORDS = [
 class TestAggUpdate(AsyncTestCase):
     @gen_test
     def test_aggupdate(self):
-        iter_in = IteratorInput(RECORDS)
-        stack = AggUpdate('id')
-        stack.add_in_edge(iter_in.out_edge(0), 0)
-        iter_in.on_submitted()
-        stack.on_submitted()
-        iter_in.run()
-        yield stack.run()
-        rcds = ListOfDict(stack.out_edge(0).records)
+        wf = Workflow()
+        wf.interval = 0.01
+        result = Container()
+        wf.append(IterInput(RECORDS))
+        wf.append(AggUpdate('id'))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
+        rcds = ListOfDict(result.records)
         self.assertEqual(len(rcds), 5)
         self.assertEqual(rcds.find("id", 3)["value"], 2345)
         self.assertEqual(len(rcds.find("id", 5)), 4)

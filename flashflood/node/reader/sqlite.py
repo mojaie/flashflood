@@ -4,56 +4,38 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.sqliteconnection import Connection
+from flashflood.node.reader.readerbase import ReaderBase
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
-from flashflood.core.node import SyncNode
 
 
-class SQLiteReader(SyncNode):
-    def __init__(self, query, params=None):
-        super().__init__(params=params)
+class SQLiteReader(ReaderBase):
+    def __init__(self, query, counter=None, **kwargs):
+        super().__init__(**kwargs)
         self.query = query
-        self.fields = sq.resource_fields(query["targets"])
+        self.counter = counter
+        self.fields.merge(sq.resource_fields(query["targets"]))
 
-    def on_submitted(self):
-        self._out_edge.records = sq.records_iter(self.query["targets"])
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)
+    def run(self, on_finish, on_abort):
+        if self.counter is not None:
+            self.counter.value = sq.record_count(self.query["targets"])
+        self._out_edge.send(sq.records_iter(self.query["targets"]))
+        on_finish()
 
 
 class SQLiteReaderSearch(SQLiteReader):
-    def on_submitted(self):
-        self._out_edge.records = (
+    def run(self, on_finish, on_abort):
+        self._out_edge.send(
             sq.search(self.query["targets"], self.query["key"], v)
             for v in self.query["values"]
         )
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)
+        on_finish()
 
 
 class SQLiteReaderFilter(SQLiteReader):
-    def on_submitted(self):
-        self._out_edge.records = sq.find_all(
+    def run(self, on_finish, on_abort):
+        self._out_edge.send(sq.find_all(
             self.query["targets"], self.query["key"],
             self.query["values"], self.query["operator"],
             fields=self.query.get("fields")
-        )
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)
-
-
-class SQLiteCustomQueryInput(SyncNode):
-    def __init__(self, sql, table, fields=None):
-        super().__init__()
-        self.sql = sql
-        self.table = table
-        if fields is None:
-            self.fields = []
-        else:
-            self.fields = fields
-
-    def on_submitted(self):
-        conn = Connection()
-        self._out_edge.records = conn.fetch_iter(self.sql)
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)
+        ))
+        on_finish()

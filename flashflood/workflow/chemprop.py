@@ -9,14 +9,16 @@ import operator
 import re
 
 from flashflood import static
+
+from flashflood.core.concurrent import ConcurrentFilter
+from flashflood.core.container import Container, Counter
+from flashflood.core.workflow import Workflow
 from flashflood.node.chem.descriptor import AsyncMolDescriptor
 from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
-from flashflood.node.function.filter import MPFilter
-from flashflood.node.function.number import AsyncNumber
-from flashflood.node.monitor.count import CountRows, AsyncCountRows
+from flashflood.node.field.number import AsyncNumber
+from flashflood.node.monitor.count import AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
-from flashflood.node.writer.container import AsyncContainerWriter
-from flashflood.workflow.responseworkflow import ResponseWorkflow
+from flashflood.node.writer.container import ContainerWriter
 
 
 def like_operator(a, b):
@@ -41,9 +43,14 @@ def prop_filter(func, op, val, row):
             return row
 
 
-class ChemProp(ResponseWorkflow):
+class ChemProp(Workflow):
     def __init__(self, query, **kwargs):
-        super().__init__(query, **kwargs)
+        super().__init__(**kwargs)
+        self.query = query
+        self.results = Container()
+        self.done_count = Counter()
+        self.input_size = Counter()
+        self.data_type = "nodes"
         desc = static.MOL_DESCS[query["key"]]
         if desc.format_type == "d3_format" or desc.format == "numeric":
             vs = [float(v) for v in query["values"]]
@@ -55,12 +62,12 @@ class ChemProp(ResponseWorkflow):
             prop_filter, desc.function,
             OPERATORS[query["operator"]], v
         )
-        self.append(SQLiteReader(query))
-        self.append(CountRows(self.input_size))
+        self.append(SQLiteReader(query, counter=self.input_size))
         self.append(UnpickleMolecule())
-        self.append(MPFilter(func, residue_counter=self.done_count))
+        self.append(ConcurrentFilter(
+            func=func, residue_counter=self.done_count))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
-        self.append(AsyncNumber())
+        self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))
         self.append(AsyncCountRows(self.done_count))
-        self.append(AsyncContainerWriter(self.results))
+        self.append(ContainerWriter(self.results))

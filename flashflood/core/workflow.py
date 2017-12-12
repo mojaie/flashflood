@@ -7,64 +7,51 @@
 from tornado import gen
 
 from flashflood.util import graph
-from flashflood.core.node import Asynchronizer
-from flashflood.core.task import Task
+from flashflood.core.task import Task, TaskSpecs, InvalidOperationError
 
 
-class Workflow(Task):
-    def __init__(self, verbose=True):
-        super().__init__()
+class Workflow(TaskSpecs):
+    def __init__(self):
         self.nodes = []
+        self.tasks = []
         self.preds = {}
         self.succs = {}
-        self.order = None
         self.interval = 0.5
-        self.datatype = "nodes"
-        # TODO: verbose output
-        self.verbose = verbose
-
-    def on_submitted(self):
-        # TODO: catch exceptions on submit (ex. file path error, format error)
-        if not self.nodes:
-            raise ValueError("No nodes are registered")
-        elif len(self.nodes) == 1:
-            self.order = [self.nodes[0].node_num]
-            self.nodes[0].on_submitted()
-        else:
-            self.order = graph.topological_sort(self.succs, self.preds)
-            for up in self.order:
-                self.nodes[up].on_submitted()
-                for down, dport in self.succs[up].items():
-                    uport = self.preds[down][up]
-                    self.nodes[down].add_in_edge(
-                        self.nodes[up].out_edge(uport), dport)
+        self.verbose = False
+        self._interrupted = False
+        self._aborting = False
 
     @gen.coroutine
-    def run(self):
-        self.on_start()
-        for node_id in self.order:
-            self.nodes[node_id].run()
-        while any(n.status == "running" for n in self.nodes):
-            if self.status == "aborted":
+    def run(self, on_finish, on_abort):
+        for task in self.tasks:
+            task.run()
+        while 1:
+            if self._interrupted and not self._aborting:
+                for n in self.nodes:
+                    n.interrupt()
+                self._aborting = True
+            if all(t.status != "running" for t in self.tasks):
+                if self._aborting:
+                    on_abort()
+                else:
+                    on_finish()
                 return
             yield gen.sleep(self.interval)
-        self.on_finish()
 
-    @gen.coroutine
+    def on_submit(self):
+        self.build_workflow()
+
+    def on_start(self):
+        pass
+
+    def on_finish(self):
+        pass
+
     def interrupt(self):
-        self.status = "interrupted"
-        # TODO: Only an Asynchronizer might be running which will be stopped
-        # TODO: sqlitewriter should allow interruption
-        fs = [
-            n.interrupt() for n in self.nodes if isinstance(n, Asynchronizer)]
-        while not all(f.done() for f in fs):
-            yield gen.sleep(self.interval)
-        self.on_aborted()
+        self._interrupted = True
 
-    @gen.coroutine
-    def submit(self):
-        self.on_submitted()
-        yield self.run()
+    def on_abort(self):
+        pass
 
     def connect(self, up, down, up_port=0, down_port=0):
         """Adds a workflow connection
@@ -93,7 +80,8 @@ class Workflow(Task):
                 port: output port of target node
         """
         if node.node_num is not None:
-            raise ValueError("This node is already assigned to the workflow")
+            raise InvalidOperationError(
+                "This node is already assigned to the workflow")
         node.node_num = len(self.nodes)
         self.nodes.append(node)
         self.preds[node.node_num] = {}
@@ -103,39 +91,71 @@ class Workflow(Task):
             self.preds[node.node_num][latest] = up_port
             self.succs[latest][node.node_num] = down_port
 
+    def build_workflow(self):
+        # TODO: catch exceptions on submit (ex. file path error, format error)
+        if not self.nodes:
+            raise InvalidOperationError("No nodes are registered")
+        if len(self.nodes) == 1:
+            self.nodes[0].interval = self.interval
+            task = Task(self.nodes[0], verbose=self.verbose)
+            self.tasks.append(task)
+            task.on_submit()
+        else:
+            order = graph.topological_sort(self.succs, self.preds)
+            for up in order:
+                self.nodes[up].interval = self.interval
+                task = Task(self.nodes[up], verbose=self.verbose)
+                self.tasks.append(task)
+                task.on_submit()
+                for down, dport in self.succs[up].items():
+                    uport = self.preds[down][up]
+                    self.nodes[down].add_in_edge(
+                        self.nodes[up].out_edge(uport), dport)
+
 
 class SubWorkflow(Workflow):
-    def __init__(self, params=None, verbose=False):
-        super().__init__(verbose=verbose)
+    """
+    Keywords:
+        **kwargs
+    """
+    def __init__(self, node_ext, **kwargs):
+        super().__init__(**kwargs)
+        self.node_ext = node_ext
         self.node_num = None
-        self._in_edge = None
-        self._out_edge = None
         self._entrance = None
         self._entrance_port = None
         self._exit = None
         self._exit_port = None
-        if params is not None:
-            self.params.update(params)
 
-    def on_submitted(self):
-        self.nodes[self._entrance].add_in_edge(
-            self._in_edge, self._entrance_port)
-        super().on_submitted()
-        self._out_edge = self.nodes[self._exit].out_edge(self._exit_port)
-        self._out_edge.fields.merge(self._in_edge.fields)
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self._in_edge.params)
-        self._out_edge.params.update(self.params)
+    @gen.coroutine
+    def run(self, on_finish, on_abort):
+        super().run(lambda: None, on_abort)
+        self.node_ext.run(on_finish, on_abort)
+
+    def on_submit(self):
+        self.build_workflow()
+        self.node_ext._in_edge = self.nodes[self._exit].out_edge(
+            self._exit_port)
+        self.node_ext.merge_fields()
+        self.node_ext.update_params()
+
+    def interrupt(self):
+        for n in self.nodes:
+            n.interrupt()
+        self.node_ext.interrupt()
 
     def add_in_edge(self, edge, port):
         if port != 0:
             raise ValueError("invalid port")
-        self._in_edge = edge
+        self.nodes[self._entrance].add_in_edge(edge, port)
 
     def out_edge(self, port):
         if port != 0:
             raise ValueError("invalid port")
-        return self._out_edge
+        return self.node_ext._out_edge
+
+    def edge_type(self, edge):
+        return self.node_ext.edge_type(edge)
 
     def set_entrance(self, node, port=0):
         if node.node_num is None:

@@ -11,61 +11,90 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood import static
-from flashflood.core.concurrent import ConcurrentSubWorkflow
+from flashflood.core.concurrent import ConcurrentNode, ConcurrentFilter
 from flashflood.core.container import Container
-from flashflood.core.node import FunctionNode
-from flashflood.core.workflow import Workflow
-from flashflood.node.reader.iterator import IteratorInput
-from flashflood.node.writer.container import AsyncContainerWriter
+from flashflood.core.node import FuncNode
+from flashflood.core.task import Task
+from flashflood.core.workflow import Workflow, SubWorkflow
+from flashflood.node.reader.iterinput import IterInput
+from flashflood.node.writer.container import ContainerWriter
 
 
 def twice(x):
     return (x * 2, current_process().name)
 
 
-class TestConcurrentSubWorkflow(AsyncTestCase):
+def odd(x):
+    if x % 2:
+        return (x, current_process().name)
+
+
+class TestConcurrentNode(AsyncTestCase):
     @gen_test
     def test_concurrent(self):
-        # sub
-        sub = ConcurrentSubWorkflow()
-        tw = FunctionNode(twice)
-        sub.set_entrance(tw)
-        sub.set_exit(tw)
-        # main
         wf = Workflow()
-        results = Container()
-        iter_in = IteratorInput(range(10))
-        writer = AsyncContainerWriter(results)
-        wf.append(iter_in)
-        wf.append(sub)
-        wf.append(writer)
-        yield wf.submit()
-        self.assertEqual(sum(i[0] for i in results.records), 90)
+        wf.interval = 0.01
+        result = Container()
+        wf.append(IterInput(range(10)))
+        wf.append(ConcurrentNode(func=twice))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
+        self.assertEqual(sum(i[0] for i in result.records), 90)
         self.assertEqual(
-            len(set(i[1] for i in results.records)), static.PROCESSES)
-        self.assertTrue(all(n.status == "done" for n in sub.nodes))
-        self.assertTrue(all(n.status == "done" for n in wf.nodes))
+            len(set(i[1] for i in result.records)), static.PROCESSES)
+        self.assertTrue(all(n.status == "done" for n in wf.tasks))
 
     @gen_test
-    def test_concurrent_interrupt(self):
+    def test_filter(self):
+        wf = Workflow()
+        wf.interval = 0.01
+        result = Container()
+        wf.append(IterInput(range(10)))
+        wf.append(ConcurrentFilter(func=odd))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
+        self.assertEqual(sum(i[0] for i in result.records), 25)
+        self.assertEqual(
+            len(set(i[1] for i in result.records)), static.PROCESSES)
+        self.assertTrue(all(n.status == "done" for n in wf.tasks))
+
+    @gen_test
+    def test_interrupt(self):
+        wf = Workflow()
+        wf.interval = 0.01
+        result = Container()
+        wf.append(IterInput(range(10000)))
+        wf.append(ConcurrentNode(func=twice))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        task.execute()
+        task.interrupt()
+        while task.status != "aborted":
+            yield gen.sleep(0.01)
+
+    @gen_test
+    def test_subworkflow(self):
         # sub
-        sub = ConcurrentSubWorkflow()
-        tw = FunctionNode(twice)
+        sub = SubWorkflow(ConcurrentNode())
+        tw = FuncNode(twice)
         sub.set_entrance(tw)
         sub.set_exit(tw)
         # main
         wf = Workflow()
-        results = Container()
-        iter_in = IteratorInput(range(10000))
-        writer = AsyncContainerWriter(results)
-        wf.append(iter_in)
-        wf.append(sub)
-        wf.append(writer)
         wf.interval = 0.01
-        wf.submit()
-        yield wf.interrupt()
-        yield gen.sleep(0.1)
-        self.assertEqual(wf.status, "aborted")
+        result = Container()
+        wf.append(IterInput(range(10)))
+        wf.append(sub)
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
+        self.assertEqual(sum(i[0] for i in result.records), 90)
+        self.assertEqual(len(set(i[1] for i in result.records)), 4)
+        self.assertEqual(sub.nodes[0].interval, 0.01)
+        self.assertTrue(all(n.status == "done" for n in sub.tasks))
+        self.assertTrue(all(n.status == "done" for n in wf.tasks))
 
 
 if __name__ == '__main__':

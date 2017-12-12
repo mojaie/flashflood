@@ -4,51 +4,42 @@
 # http://opensource.org/licenses/MIT
 #
 
-import pickle
 import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.container import Container
+from flashflood.core.task import Task
+from flashflood.core.workflow import Workflow
 from flashflood.node.field.extend import Extend
-from flashflood.node.reader.iterator import IteratorInput
+from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.writer.container import ContainerWriter
 
 
 class TestExtend(AsyncTestCase):
     @gen_test
     def test_copy(self):
+        wf = Workflow()
+        wf.interval = 0.01
         result = Container()
-        iter_in = IteratorInput({"idx": i} for i in range(10))
-        ext = Extend("copied", "idx")
-        self.assertIsInstance(pickle.dumps(ext.func), bytes)
-        out = ContainerWriter(result)
-        ext.add_in_edge(iter_in.out_edge(0), 0)
-        out.add_in_edge(ext.out_edge(0), 0)
-        iter_in.on_submitted()
-        ext.on_submitted()
-        out.on_submitted()
-        iter_in.run()
-        ext.run()
-        yield out.run()
+        wf.append(IterInput({"idx": i} for i in range(10)))
+        wf.append(Extend("copied", "idx"))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
         self.assertEqual(sum(i["idx"] for i in result.records), 45)
         self.assertEqual(sum(i["copied"] for i in result.records), 45)
 
     @gen_test
     def test_replace(self):
+        wf = Workflow()
+        wf.interval = 0.01
         result = Container()
-        iter_in = IteratorInput({"idx": i} for i in range(10))
-        ext = Extend("new_idx", "idx", in_place=True)
-        self.assertIsInstance(pickle.dumps(ext.func), bytes)
-        out = ContainerWriter(result)
-        ext.add_in_edge(iter_in.out_edge(0), 0)
-        out.add_in_edge(ext.out_edge(0), 0)
-        iter_in.on_submitted()
-        ext.on_submitted()
-        out.on_submitted()
-        iter_in.run()
-        ext.run()
-        yield out.run()
+        wf.append(IterInput({"idx": i} for i in range(10)))
+        wf.append(Extend("new_idx", "idx", in_place=True))
+        wf.append(ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
         self.assertFalse("idx" in result.records[0])
         self.assertEqual(sum(i["new_idx"] for i in result.records), 45)
 

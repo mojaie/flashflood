@@ -7,10 +7,11 @@
 from tornado import gen
 from tornado.queues import Queue
 
+from flashflood import functional
 from flashflood.lod import ListOfDict
 
 
-class Edge(object):
+class IterEdge(object):
     """Synchronous data flow edge
 
     Attributes:
@@ -18,13 +19,26 @@ class Edge(object):
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
     """
-    def __init__(self):
-        self.records = []
+    def __init__(self, sampler=None):
+        self.status = "ready"
+        self.records = None
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
+
+    def send(self, rcds):
+        if self.sampler is None:
+            self.records = rcds
+        else:
+            self.records = list(rcds)
+            self.sampler.put_from_list(self.records)
+        self.status = "done"
+
+    def abort(self):
+        self.status = "aborted"
 
 
-class FunctionEdge(object):
+class FuncEdge(object):
     """Function data flow edge
 
     Attributes:
@@ -33,14 +47,29 @@ class FunctionEdge(object):
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
     """
-    def __init__(self):
+    def __init__(self, sampler=None):
+        self.status = "ready"
         self.func = None
-        self.records = []
+        self.records = None
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
+
+    def send(self, func, rcds):
+        if self.sampler is None:
+            self.func = func
+            self.records = rcds
+        else:
+            self.func = functional.identity
+            self.records = list(map(func, rcds))
+            self.sampler.put_from_list(self.records)
+        self.status = "done"
+
+    def abort(self):
+        self.status = "aborted"
 
 
-class AsyncQueueEdge(object):
+class AsyncEdge(object):
     """Asynchronous data flow edge
 
     Attributes:
@@ -59,17 +88,20 @@ class AsyncQueueEdge(object):
           in the edge is sent to the target node
 
     """
-    def __init__(self):
-        self.queue = Queue(20)
+    def __init__(self, sampler=None):
         self.status = "ready"
+        self.queue = Queue(20)
         self.fields = ListOfDict()
         self.params = {}
+        self.sampler = sampler
 
     @gen.coroutine
     def put(self, record):
         """Puts a record to the queue.
 
         This should be called by an upstream node."""
+        if self.sampler is not None:
+            self.sampler.put(record)
         yield self.queue.put(record)
 
     @gen.coroutine
@@ -90,7 +122,7 @@ class AsyncQueueEdge(object):
         self.status = "done"
 
     @gen.coroutine
-    def aborted(self):
+    def abort(self):
         """Waits until finish sending records to its downstream node.
 
         This should be called by an upstream node when it is aborted."""

@@ -4,28 +4,22 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.core.node import SyncNode
+from flashflood.core.node import IterNode
 
 
-class AggUpdate(SyncNode):
-    def __init__(self, key, params=None):
-        super().__init__()
+class AggUpdate(IterNode):
+    def __init__(self, key, **kwargs):
+        super().__init__(**kwargs)
         self.key = key
-        self.seen = set()
-        self.mapping = {}
-        if params is not None:
-            self.params.update(params)
+        self._seen = set()
+        self._mapping = {}
 
-    def update(self):
-        for r in self._in_edge.records:
+    def processor(self, rcds):
+        for r in rcds:
             k = r[self.key]
-            if k in self.seen:
-                self.mapping[k].update(r)
+            if k in self._seen:
+                self._mapping[k].update(r)
                 continue
-            self.seen.add(k)
-            self.mapping[k] = r
+            self._seen.add(k)
+            self._mapping[k] = r
             yield r
-
-    def on_submitted(self):
-        super().on_submitted()
-        self._out_edge.records = self.update()

@@ -52,4 +52,8 @@ class Sampler(object):
             raise ValueError("Source records should be a list.")
         source = iter(records)
         while not self.done:
-            self.put(next(source))
+            try:
+                s = next(source)
+            except StopIteration:
+                return
+            self.put(s)

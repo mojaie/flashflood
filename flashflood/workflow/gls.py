@@ -9,15 +9,16 @@ import functools
 from chorus import mcsdr
 
 from flashflood import static
+from flashflood.core.concurrent import ConcurrentFilter
+from flashflood.core.container import Container, Counter
+from flashflood.core.workflow import Workflow
 from flashflood.node.chem.descriptor import AsyncMolDescriptor
 from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
-from flashflood.node.function.filter import MPFilter
-from flashflood.node.function.number import AsyncNumber
-from flashflood.node.monitor.count import CountRows, AsyncCountRows
+from flashflood.node.field.number import AsyncNumber
+from flashflood.node.monitor.count import AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
-from flashflood.node.writer.container import AsyncContainerWriter
+from flashflood.node.writer.container import ContainerWriter
 from flashflood.sqlitehelper import SQLITE_HELPER as sq
-from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def mcsdr_filter(qmolarr, params, row):
@@ -42,18 +43,22 @@ def mcsdr_filter(qmolarr, params, row):
         return row
 
 
-class GLS(ResponseWorkflow):
+class GLS(Workflow):
     def __init__(self, query, **kwargs):
-        super().__init__(query, **kwargs)
+        super().__init__(**kwargs)
+        self.query = query
+        self.results = Container()
+        self.done_count = Counter()
+        self.input_size = Counter()
+        self.data_type = "nodes"
         qmol = sq.query_mol(query["queryMol"])
         qmolarr = mcsdr.comparison_array(
             qmol, query["params"]["diameter"], query["params"]["maxTreeSize"])
         func = functools.partial(mcsdr_filter, qmolarr, query["params"])
-        self.append(SQLiteReader(query))
-        self.append(CountRows(self.input_size))
+        self.append(SQLiteReader(query, counter=self.input_size))
         self.append(UnpickleMolecule())
-        self.append(MPFilter(
-            func, residue_counter=self.done_count,
+        self.append(ConcurrentFilter(
+            func=func, residue_counter=self.done_count,
             fields=[
                 {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
                 {"key": "local_sim", "name": "GLS", "d3_format": ".2f"}
@@ -61,6 +66,6 @@ class GLS(ResponseWorkflow):
         ))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
-        self.append(AsyncNumber())
+        self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))
         self.append(AsyncCountRows(self.done_count))
-        self.append(AsyncContainerWriter(self.results))
+        self.append(ContainerWriter(self.results))

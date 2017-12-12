@@ -6,7 +6,7 @@
 
 import functools
 
-from flashflood.core.node import FunctionNode
+from flashflood.core.node import FuncNode
 
 
 def concat(old_keys, new_key, separator, row):
@@ -17,17 +17,14 @@ def concat(old_keys, new_key, separator, row):
     return new_row
 
 
-class ConcatFields(FunctionNode):
-    def __init__(self, old_keys, new_key, separator="_",
-                 fields=None, params=None):
+class ConcatFields(FuncNode):
+    def __init__(self, old_keys, new_key, separator="_", **kwargs):
         super().__init__(
            functools.partial(concat, old_keys, new_key, separator),
-           params=params)
+           **kwargs)
         self.old_keys = old_keys
-        if fields is not None:
-            self.fields.merge(fields)
 
-    def on_submitted(self):
-        super().on_submitted()
+    def merge_fields(self):
+        super().merge_fields()
         for k in self.old_keys:
             self._out_edge.fields.delete("key", k)

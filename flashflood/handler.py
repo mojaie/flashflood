@@ -28,6 +28,7 @@ from flashflood.workflow import substructure as substr
 from flashflood.workflow.chemprop import ChemProp
 from flashflood.workflow.gls import GLS
 from flashflood.workflow.profile import Profile
+from flashflood.workflow.responsetask import ResponseTask
 from flashflood.workflow.rdkitfmcs import RDKitFMCS
 from flashflood.workflow.rdkitmorgan import RDKitMorgan
 from flashflood.workflow.sdfparser import SDFParser
@@ -67,8 +68,9 @@ class WorkflowHandler(BaseHandler):
             "profile": Profile
         }
         wf = workflows[query["type"]](query)
-        yield wf.submit()
-        self.write(wf.response())
+        task = ResponseTask(wf)
+        yield task.execute()
+        self.write(task.response())
 
 
 class AsyncWorkflowHandler(BaseHandler):
@@ -90,8 +92,9 @@ class AsyncWorkflowHandler(BaseHandler):
             "rdmorgan": RDKitMorgan
         }
         wf = workflows[query["type"]](query)
-        yield self.jq.put(wf)
-        self.write(wf.response())
+        task = ResponseTask(wf)
+        yield self.jq.put(task)
+        self.write(task.response())
 
 
 class ResultHandler(BaseHandler):
@@ -105,7 +108,7 @@ class ResultHandler(BaseHandler):
         """Fetch calculation results"""
         query = json.loads(self.get_argument("query"))
         try:
-            wf = self.jq.get(query["id"])
+            task = self.jq.get(query["id"])
         except ValueError:
             self.write({
                 "id": query["id"],
@@ -114,8 +117,12 @@ class ResultHandler(BaseHandler):
             })
         else:
             if query["command"] == "abort":
-                yield self.jq.abort(query["id"])
-            self.write(wf.response())
+                self.jq.abort(query["id"])
+            while 1:
+                if task.status in ("done", "aborted"):
+                    break
+                yield gen.sleep(0.5)
+            self.write(task.response())
 
 
 class SimilarityNetworkHandler(BaseHandler):
@@ -134,8 +141,9 @@ class SimilarityNetworkHandler(BaseHandler):
             "rdfmcs": simnet.RDKitFMCSNetwork,
         }
         wf = workflows[params["measure"]](js, params)
-        yield self.jq.put(wf)
-        self.write(wf.response())
+        task = ResponseTask(wf)
+        yield self.jq.put(task)
+        self.write(task.response())
 
 
 class StructurePreviewHandler(BaseHandler):
@@ -165,9 +173,9 @@ class SDFileParserHandler(BaseHandler):
             "sourceFile": filename,
             "params": params
         }
-        wf = SDFParser(contents, query)
-        yield wf.submit()
-        self.write(wf.response())
+        task = ResponseTask(SDFParser(contents, query))
+        yield task.execute()
+        self.write(task.response())
 
 
 class SDFileExportHandler(BaseHandler):

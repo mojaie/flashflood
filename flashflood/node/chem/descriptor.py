@@ -5,10 +5,11 @@
 #
 
 import functools
+import warnings
 
 from flashflood import static
-from flashflood.core.node import FunctionNode
-from flashflood.node.function.apply import AsyncApply
+from flashflood.core.node import FuncNode, AsyncNode
+from flashflood.core.task import UnexpectedOperationWarning
 
 
 def mol_descriptors(descs, row):
@@ -18,31 +19,36 @@ def mol_descriptors(descs, row):
     return new_row
 
 
-class MolDescriptor(FunctionNode):
-    def __init__(self, descriptors, params=None):
+class MolDescriptor(FuncNode):
+    def __init__(self, descriptors, **kwargs):
         super().__init__(
-            functools.partial(mol_descriptors, descriptors),
-            params=params)
-        fields = []
+            functools.partial(mol_descriptors, descriptors), **kwargs)
+        if self.fields:
+            warnings.warn(
+                "Custom fields may overwrite MolDescriptor fields",
+                UnexpectedOperationWarning)
         for desc in descriptors:
             props = static.MOL_DESCS[desc]
-            fields.append({
+            self.fields.add({
                 "key": desc, "name": props.name,
                 props.format_type: props.format
-            })
-        self.fields.merge(fields)
+            }, dupkey="skip")
 
 
-class AsyncMolDescriptor(AsyncApply):
-    def __init__(self, descriptors, params=None):
-        super().__init__(
-            functools.partial(mol_descriptors, descriptors),
-            params=params)
-        fields = []
+class AsyncMolDescriptor(AsyncNode):
+    def __init__(self, descriptors, **kwargs):
+        super().__init__(**kwargs)
+        self.descs = descriptors
+        if self.fields:
+            warnings.warn(
+                "Custom fields may overwrite MolDescriptor fields",
+                UnexpectedOperationWarning)
         for desc in descriptors:
             props = static.MOL_DESCS[desc]
-            fields.append({
+            self.fields.add({
                 "key": desc, "name": props.name,
                 props.format_type: props.format
-            })
-        self.fields.merge(fields)
+            }, dupkey="skip")
+
+    def process_record(self, rcd):
+        return mol_descriptors(self.descs, rcd)

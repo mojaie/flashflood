@@ -11,33 +11,28 @@ from tornado.testing import AsyncTestCase, gen_test
 from flashflood.core.container import Container
 from flashflood.core.task import Task
 from flashflood.core.workflow import Workflow
-from flashflood.node.aggregate.first import AggFirst
+from flashflood.node.control.filter import Filter
 from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.writer.container import ContainerWriter
 
 
-RECORDS = [
-    {"id": 1, "type": "a", "value": 12.4},
-    {"id": 2, "type": "b", "value": 54.23},
-    {"id": 3, "type": "c", "value": 111},
-    {"id": 4, "type": "a", "value": 98.0},
-    {"id": 5, "type": "c", "value": None},
-    {"id": 3, "type": "a", "value": 2345}
-]
+def f(x):
+    if x % 2:
+        return x
 
 
-class TestAggFirst(AsyncTestCase):
+class TestFilter(AsyncTestCase):
     @gen_test
-    def test_aggfirst(self):
+    def test_filter(self):
         wf = Workflow()
         wf.interval = 0.01
         result = Container()
-        wf.append(IterInput(RECORDS))
-        wf.append(AggFirst('id'))
+        wf.append(IterInput(range(10)))
+        wf.append(Filter(f))
         wf.append(ContainerWriter(result))
         task = Task(wf)
         yield task.execute()
-        self.assertEqual(len(list(result.records)), 5)
+        self.assertEqual(sum(result.records), 25)
 
 
 if __name__ == '__main__':

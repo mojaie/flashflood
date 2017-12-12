@@ -30,8 +30,8 @@ class JobQueue(object):
             if task.creation_time + self.task_lifetime > now:
                 alive.append(task)
         self.store = alive
+        task.on_submit()
         yield self.queue.put(task)
-        task.on_submitted()
 
     def get(self, id_):
         for task in self.store:
@@ -39,11 +39,10 @@ class JobQueue(object):
                 return task
         raise ValueError('Task {} not found'.format(id_[:8]))
 
-    @gen.coroutine
     def abort(self, id_):
         task = self.get(id_)
         if task.status == "running":
-            yield task.interrupt()
+            task.interrupt()
         if task.status == "ready":
             task.status = "cancelled"
 

@@ -8,13 +8,13 @@ import unittest
 
 from tornado.testing import AsyncTestCase, gen_test
 
-from flashflood.core.edge import AsyncQueueEdge
+from flashflood.core.edge import AsyncEdge
 
 
 class TestEdge(AsyncTestCase):
     @gen_test
     def test_asyncedge(self):
-        edge = AsyncQueueEdge()
+        edge = AsyncEdge()
         in_ = 123
         yield edge.put(in_)
         out = yield edge.get()

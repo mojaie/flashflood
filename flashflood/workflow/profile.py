@@ -6,11 +6,13 @@
 
 from flashflood import lod
 from flashflood import sqlitehelper as helper
+from flashflood import static
+from flashflood.core.workflow import Workflow
+from flashflood.core.container import Container
 from flashflood.node.reader import sqlite
-from flashflood.node.function.number import Number
+from flashflood.node.field.number import Number
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.node.record.merge import MergeRecords
-from flashflood.workflow.responseworkflow import ResponseWorkflow
 
 
 def add_rsrc_fields(fields_dict, row):
@@ -19,9 +21,12 @@ def add_rsrc_fields(fields_dict, row):
     return row
 
 
-class Profile(ResponseWorkflow):
+class Profile(Workflow):
     def __init__(self, query, **kwargs):
-        super().__init__(query, **kwargs)
+        super().__init__(**kwargs)
+        self.query = query
+        self.results = Container()
+        self.data_type = "nodes"
         targets = lod.filtered(helper.SQLITE_RESOURCES, "domain", "activity")
         target_ids = lod.valuelist(targets, "id")
         sq = {
@@ -42,5 +47,5 @@ class Profile(ResponseWorkflow):
         """
         merge = MergeRecords()
         self.connect(sq_filter, merge)
-        self.connect(merge, Number())
+        self.connect(merge, Number("index", fields=[static.INDEX_FIELD]))
         self.append(ContainerWriter(self.results))

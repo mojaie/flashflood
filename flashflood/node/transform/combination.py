@@ -5,22 +5,20 @@
 #
 
 import itertools
+from math import factorial as f
 
-from flashflood.core.edge import Edge, FunctionEdge
-from flashflood.core.node import SyncNode
+from flashflood.core.node import IterNode
 
 
-class Combination(SyncNode):
-    def __init__(self, r=2, params=None):
-        super().__init__(params=params)
+class Combination(IterNode):
+    def __init__(self, r=2, counter=None, **kwargs):
+        super().__init__(**kwargs)
         self.r = r
+        self.counter = counter
 
-    def on_submitted(self):
-        super().on_submitted()
-        if isinstance(self._in_edge, Edge):
-            rcds = self._in_edge.records
-        elif isinstance(self._in_edge, FunctionEdge):
-            rcds = map(self._in_edge.func, self._in_edge.records)
-        else:
-            raise ValueError("Invalid upstream edge.")
-        self._out_edge.records = itertools.combinations(rcds, self.r)
+    def processor(self, rcds):
+        if self.counter is not None:
+            rcds = list(rcds)
+            n = len(rcds)
+            self.counter.value = f(n) // f(self.r) // f(n - self.r)
+        return itertools.combinations(rcds, self.r)

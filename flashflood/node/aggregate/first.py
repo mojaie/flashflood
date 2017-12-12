@@ -4,25 +4,19 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.core.node import SyncNode
+from flashflood.core.node import IterNode
 
 
-class AggFirst(SyncNode):
-    def __init__(self, key, params=None):
-        super().__init__()
+class AggFirst(IterNode):
+    def __init__(self, key, **kwargs):
+        super().__init__(**kwargs)
         self.key = key
-        self.seen = set()
-        if params is not None:
-            self.params.update(params)
+        self._seen = set()
 
-    def first(self):
-        for r in self._in_edge.records:
+    def processor(self, rcds):
+        for r in rcds:
             k = r[self.key]
-            if k in self.seen:
+            if k in self._seen:
                 continue
-            self.seen.add(k)
+            self._seen.add(k)
             yield r
-
-    def on_submitted(self):
-        super().on_submitted()
-        self._out_edge.records = self.first()

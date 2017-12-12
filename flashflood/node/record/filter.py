@@ -6,13 +6,18 @@
 
 import operator
 
-from flashflood.node.function.filter import Filter
+from flashflood.node.control.filter import Filter, AsyncFilter
 
 
 class FilterRecords(Filter):
-    def __init__(self, key, value, filter_operator=operator.eq,
-                 params=None):
+    def __init__(self, key, value, filter_operator=operator.eq, **kwargs):
         super().__init__(
             lambda x: filter_operator(x[key], value),
-            params=params
-        )
+            residue_counter=None, fields=None, **kwargs)
+
+
+class AsyncFilterRecords(AsyncFilter):
+    def __init__(self, key, value, filter_operator=operator.eq, **kwargs):
+        super().__init__(
+            lambda x: filter_operator(x[key], value),
+            residue_counter=None, fields=None, **kwargs)

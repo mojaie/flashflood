@@ -4,26 +4,29 @@
 # http://opensource.org/licenses/MIT
 #
 
-from chorus import v2000reader  # , v2000writer
+from chorus import v2000reader
 from chorus import molutil
 from chorus.draw import calc2dcoords
 
 from flashflood import static
-from flashflood.core.node import SyncNode
+from flashflood.node.reader.readerbase import ReaderBase
 
 
-class SDFileReaderBase(SyncNode):
+class SDFileReaderBase(ReaderBase):
     def __init__(self, sdf_options=(), implicit_hydrogen=False,
-                 recalc_coords=False, fields=None, params=None):
-        super().__init__(params=params)
+                 recalc_coords=False, **kwargs):
+        super().__init__(**kwargs)
         self.sdf_options = sdf_options
         self.implicit_hydrogen = implicit_hydrogen
         self.recalc_coords = recalc_coords
-        self.fields.merge(
-            {"key": s, "name": s, "format": "text"} for s in sdf_options)
+        if not self.fields:
+            self.fields.merge(
+                {"key": s, "name": s, "format": "text"} for s in sdf_options)
         self.fields.add(static.MOLOBJ_FIELD)
-        if fields is not None:
-            self.fields.merge(fields)
+
+    def run(self, on_finish, on_abort):
+        self._out_edge.send(self.records_iter())
+        on_finish()
 
     def records_iter(self):
         for mol in self.contents:
@@ -37,21 +40,14 @@ class SDFileReaderBase(SyncNode):
                 row[op] = mol.data.get(op, "")
             yield row
 
-    def on_submitted(self):
-        self._out_edge.records = self.records_iter()
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)
-
 
 class SDFileReader(SDFileReaderBase):
     def __init__(self, in_file, **kwargs):
         super().__init__(**kwargs)
         self.contents = v2000reader.mols_from_file(in_file)
-        self.row_count = v2000reader.inspect_file(in_file)[1]
 
 
 class SDFileLinesInput(SDFileReaderBase):
     def __init__(self, lines, **kwargs):
         super().__init__(**kwargs)
         self.contents = v2000reader.mols_from_text(lines)
-        self.row_count = v2000reader.inspect_text(lines)[1]

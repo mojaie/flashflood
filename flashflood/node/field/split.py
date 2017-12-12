@@ -7,7 +7,7 @@
 import functools
 import itertools
 
-from flashflood.core.node import FunctionNode
+from flashflood.core.node import FuncNode
 
 
 def split(old_key, new_keys, separator, fill, row):
@@ -20,17 +20,14 @@ def split(old_key, new_keys, separator, fill, row):
     return new_row
 
 
-class SplitField(FunctionNode):
-    def __init__(self, old_key, new_keys, separator, fill=None,
-                 fields=None, params=None):
+class SplitField(FuncNode):
+    def __init__(self, old_key, new_keys, separator, fill=None, **kwargs):
         super().__init__(
             functools.partial(split, old_key, new_keys, separator, fill),
-            params=params
+            **kwargs
         )
         self.old_key = old_key
-        if fields is not None:
-            self.fields.merge(fields)
 
-    def on_submitted(self):
-        super().on_submitted()
+    def merge_fields(self):
+        super().merge_fields()
         self._out_edge.fields.delete("key", self.old_key)

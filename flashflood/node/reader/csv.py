@@ -5,39 +5,32 @@
 #
 
 import csv
-from flashflood.core.node import SyncNode
+
+from flashflood.node.reader.readerbase import ReaderBase
 
 
-class CSVFileReader(SyncNode):
-    def __init__(self, in_file, delimiter=",", fields=None, params=None):
-        super().__init__(params=params)
+class CSVFileReader(ReaderBase):
+    def __init__(self, in_file, delimiter=",", **kwargs):
+        super().__init__(**kwargs)
         self.in_file = in_file
         self.delimiter = delimiter
-        if fields is not None:
-            self.fields.merge(fields)
+        if not self.fields:
+            with open(self.in_file, newline="") as f:
+                reader = csv.DictReader(f, delimiter=self.delimiter)
+                try:
+                    next(reader)
+                except StopIteration:
+                    pass
+                self.fields.merge(
+                    {"key": f, "name": f, "format": "raw"}
+                    for f in reader.fieldnames
+                )
 
-    def inspect(self):
-        with open(self.in_file, newline="") as f:
-            count = sum(1 for _ in f.readlines()) - 1
-        with open(self.in_file, newline="") as f:
-            reader = csv.DictReader(f, delimiter=self.delimiter)
-            try:
-                next(reader)
-            except StopIteration:
-                pass
-            fieldnames = reader.fieldnames
-        return fieldnames, count
+    def run(self, on_finish, on_abort):
+        self._out_edge.send(self.reader())
+        on_finish()
 
     def reader(self):
         with open(self.in_file, newline="") as f:
             for row in csv.DictReader(f, delimiter=self.delimiter):
                 yield row
-
-    def on_submitted(self):
-        # TODO: a bit tricky
-        self._out_edge.records = self.reader()
-        fnames, count = self.inspect()
-        self._out_edge.fields.merge(
-            {"key": f, "name": f, "format": "text"} for f in fnames)
-        self._out_edge.fields.merge(self.fields)
-        self._out_edge.params.update(self.params)

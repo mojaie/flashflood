@@ -6,7 +6,7 @@
 
 import functools
 
-from flashflood.core.node import FunctionNode
+from flashflood.core.node import FuncNode
 
 
 def rename(updates, row):
@@ -19,15 +19,13 @@ def rename(updates, row):
     return new_row
 
 
-class UpdateFields(FunctionNode):
-    def __init__(self, updates, fields=None, params=None):
-        super().__init__(functools.partial(rename, updates), params=params)
+class UpdateFields(FuncNode):
+    def __init__(self, updates, **kwargs):
+        super().__init__(functools.partial(rename, updates), **kwargs)
         self.updates = updates
-        if fields is not None:
-            self.fields.merge(fields)
 
-    def on_submitted(self):
-        super().on_submitted()
+    def merge_fields(self):
+        super().merge_fields()
         for field in self._out_edge.fields:
             if field["key"] in self.updates:
                 field["key"] = self.updates[field["key"]]

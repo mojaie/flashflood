@@ -6,10 +6,8 @@
 
 import functools
 
-from tornado import gen
-
 from flashflood import functional
-from flashflood.core.node import AsyncNode, FunctionNode
+from flashflood.core.node import FuncNode, AsyncNode
 
 
 def extend(key, source_key, func, in_place, fill, row):
@@ -23,43 +21,36 @@ def extend(key, source_key, func, in_place, fill, row):
     return new_row
 
 
-class Extend(FunctionNode):
+class Extend(FuncNode):
     def __init__(self, key, source_key, func=functional.identity,
-                 in_place=False, fill=None, fields=None, params=None):
+                 in_place=False, fill=None, **kwargs):
         super().__init__(
             functools.partial(extend, key, source_key, func, in_place, fill),
-            params=params)
+            **kwargs)
         self.old_key = None
         if in_place and key != source_key:
             self.old_key = source_key
-        if fields is not None:
-            self.fields.merge(fields)
 
-    def on_submitted(self):
-        super().on_submitted()
+    def merge_fields(self):
+        super().merge_fields()
         if self.old_key is not None:
             self._out_edge.fields.delete("key", self.old_key)
 
 
 class AsyncExtend(AsyncNode):
     def __init__(self, key, source_key, func=functional.identity,
-                 in_place=False, fill=None, fields=None, params=None):
-        super().__init__(params=params)
+                 in_place=False, fill=None, **kwargs):
+        super().__init__(**kwargs)
         self.func = functools.partial(
             extend, key, source_key, func, in_place, fill)
         self.old_key = None
         if in_place and key != source_key:
             self.old_key = source_key
-        if fields is not None:
-            self.fields.merge(fields)
 
-    @gen.coroutine
-    def _get_loop(self):
-        while 1:
-            in_ = yield self._in_edge.get()
-            yield self._out_edge.put(self.func(in_))
-
-    def on_submitted(self):
-        super().on_submitted()
+    def merge_fields(self):
+        super().merge_fields()
         if self.old_key is not None:
             self._out_edge.fields.delete("key", self.old_key)
+
+    def process_record(self, rcd):
+        return self.func(rcd)

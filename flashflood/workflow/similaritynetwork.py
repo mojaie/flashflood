@@ -10,14 +10,15 @@ from chorus import mcsdr
 from chorus import molutil
 from chorus import rdkit
 
-from flashflood.core.node import FunctionNode
+from flashflood.core.concurrent import ConcurrentFilter
+from flashflood.core.container import Container, Counter
+from flashflood.core.node import FuncNode
+from flashflood.core.workflow import Workflow
 from flashflood.node.chem.molecule import MoleculeFromJSON
-from flashflood.node.function.filter import MPFilter
-from flashflood.node.monitor.count import CountRows, AsyncCountRows
-from flashflood.node.reader.iterator import IteratorInput
+from flashflood.node.monitor.count import AsyncCountRows
+from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.transform.combination import Combination
-from flashflood.node.writer.container import AsyncContainerWriter
-from flashflood.workflow.responseworkflow import ResponseWorkflow
+from flashflood.node.writer.container import ContainerWriter
 
 
 GRAPH_FIELDS = [
@@ -89,55 +90,64 @@ def rdkit_mol(params, rcd):
     return {"index": rcd["index"], "mol": mol}
 
 
-class GLSNetwork(ResponseWorkflow):
+class GLSNetwork(Workflow):
     def __init__(self, contents, params, **kwargs):
-        super().__init__(params, **kwargs)
+        super().__init__(**kwargs)
+        self.query = {"params": params}
+        self.results = Container()
+        self.done_count = Counter()
+        self.input_size = Counter()
         self.data_type = "edges"
-        self.reference["nodes"] = contents["id"]
-        self.append(IteratorInput(contents["records"]))
+        self.reference = {"nodes": contents["id"]}
+        self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FunctionNode(functools.partial(gls_array, params)))
-        self.append(Combination())
-        self.append(CountRows(self.input_size))
-        self.append(MPFilter(
-            functools.partial(gls_filter, params),
+        self.append(FuncNode(functools.partial(gls_array, params)))
+        self.append(Combination(counter=self.input_size))
+        self.append(ConcurrentFilter(
+            func=functools.partial(gls_filter, params),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))
-        self.append(AsyncContainerWriter(self.results))
+        self.append(ContainerWriter(self.results))
 
 
-class RDKitMorganNetwork(ResponseWorkflow):
+class RDKitMorganNetwork(Workflow):
     def __init__(self, contents, params, **kwargs):
-        super().__init__(params, **kwargs)
+        super().__init__(**kwargs)
+        self.query = {"params": params}
+        self.results = Container()
+        self.done_count = Counter()
+        self.input_size = Counter()
         self.data_type = "edges"
-        self.reference["nodes"] = contents["id"]
-        self.append(IteratorInput(contents["records"]))
+        self.reference = {"nodes": contents["id"]}
+        self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(Apply(functools.partial(rdkit_mol, params)))
-        self.append(Combination())
-        self.append(CountRows(self.input_size))
-        self.append(MPFilter(
-            functools.partial(morgan_filter, params),
+        self.append(FuncNode(functools.partial(rdkit_mol, params)))
+        self.append(Combination(counter=self.input_size))
+        self.append(ConcurrentFilter(
+            func=functools.partial(morgan_filter, params),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))
-        self.append(AsyncContainerWriter(self.results))
+        self.append(ContainerWriter(self.results))
 
 
-class RDKitFMCSNetwork(ResponseWorkflow):
+class RDKitFMCSNetwork(Workflow):
     def __init__(self, contents, params, **kwargs):
-        super().__init__(params, **kwargs)
+        super().__init__(**kwargs)
+        self.query = {"params": params}
+        self.results = Container()
+        self.done_count = Counter()
+        self.input_size = Counter()
         self.data_type = "edges"
-        self.reference["nodes"] = contents["id"]
-        self.append(IteratorInput(contents["records"]))
+        self.reference = {"nodes": contents["id"]}
+        self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(Apply(functools.partial(rdkit_mol, params)))
-        self.append(Combination())
-        self.append(CountRows(self.input_size))
-        self.append(MPFilter(
-            functools.partial(fmcs_filter, params),
+        self.append(FuncNode(functools.partial(rdkit_mol, params)))
+        self.append(Combination(counter=self.input_size))
+        self.append(ConcurrentFilter(
+            func=functools.partial(fmcs_filter, params),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))
-        self.append(AsyncContainerWriter(self.results))
+        self.append(ContainerWriter(self.results))

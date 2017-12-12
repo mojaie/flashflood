@@ -6,24 +6,59 @@
 
 import itertools
 
-from flashflood.core.node import SyncNode
+from tornado import gen
+from flashflood.core.edge import IterEdge
+from flashflood.core.node import Node
+from flashflood.core.task import InvalidOperationError
 
 
-class MergeRecords(SyncNode):
-    def __init__(self, params=None):
-        super().__init__(params=params)
+class MergeRecords(Node):
+    def __init__(self, sampler=None, **kwargs):
+        super().__init__(**kwargs)
         self._in_edges = []
+        self._rcds_tmp = None
+        self._out_edge = IterEdge(sampler)
 
     def add_in_edge(self, edge, port):
         if port != 0:
-            raise ValueError("invalid port")
+            raise InvalidOperationError("invalid port")
         self._in_edges.append(edge)
 
-    def on_submitted(self):
-        self._out_edge.records = itertools.chain.from_iterable(
-            i.records for i in self._in_edges)
+    @gen.coroutine
+    def run(self, on_finish, on_abort):
+        rcds = []
+        for edge in self._in_edges:
+            if self.edge_type(edge) == "AsyncEdge":
+                self.synchronizer(edge)
+            while 1:
+                if edge.status == "aborted":
+                    on_abort()
+                    return
+                if edge.status == "done":
+                    if self.edge_type(edge) == "IterEdge":
+                        rcds.append(edge.records)
+                    elif self.edge_type(edge) == "FuncEdge":
+                        rcds.append(map(edge.func, edge.records))
+                    elif self.edge_type(edge) == "AsyncEdge":
+                        rcds.append(self._rcds_tmp)
+                    break
+                yield gen.sleep(self.interval)
+        self._out_edge.send(itertools.chain.from_iterable(rcds))
+        on_finish()
+
+    @gen.coroutine
+    def synchronizer(self, edge):
+        self._rcds_tmp = []
+        while 1:
+            in_ = yield edge.get()
+            self._rcds_tmp.append(in_)
+
+    def merge_fields(self):
         for e in self._in_edges:
             self._out_edge.fields.merge(e.fields)
+        self._out_edge.fields.merge(self.fields)
+
+    def update_params(self):
         for e in self._in_edges:
             self._out_edge.params.update(e.params)
         self._out_edge.params.update(self.params)
