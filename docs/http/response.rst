@@ -21,9 +21,6 @@ Response JSON format
     * **records**\ (*object*) - list of record
     * **status**\ (*string*) - task status
     * **created**\ (*string*) - date computation job created
-    * **resultCount**\ (*int*) - total number of result rows
-    * **taskCount**\ (*int*) - total number of row tasks to be processed
-    * **doneCount**\ (*int*) - total number of done tasks
     * **progress**\ (*float*) - doneCount / taskCount * 100
 
     * **responseDate**\ (*string*) - date of response sent from server
