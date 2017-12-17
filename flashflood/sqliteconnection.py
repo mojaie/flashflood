@@ -9,7 +9,6 @@ import sqlite3
 
 
 class Connection(object):
-
     def __init__(self, path):
         con = sqlite3.connect(path)
         con.row_factory = sqlite3.Row

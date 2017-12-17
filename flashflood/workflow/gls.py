@@ -22,6 +22,7 @@ from flashflood.sqlitehelper import SQLITE_HELPER as sq
 
 
 def mcsdr_filter(qmolarr, params, row):
+    # TODO: Need to refactor
     type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
     if len(row["__molobj"]) > params["molSizeCutoff"]:  # mol size filter
         return
