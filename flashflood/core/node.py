@@ -16,14 +16,14 @@ class Node(TaskSpecs):
     """Node base class
 
     Args:
-        fields: data fields
-        params: workflow variable dict
+        fields(ListOfDict): data fields
+        params(dict): workflow variable dict
 
     Parameters:
-        node_num: node number assigned by `Workflow`
-        fields: data fields
-        params: workflow variable dict
-        interval: worker thread loop interval
+        node_num(int): node number assigned by `Workflow`
+        fields(ListOfDict): data fields
+        params(dict): workflow variable dict
+        interval(float): worker thread loop interval
     """
     def __init__(self, fields=None, params=None):
         self.node_num = None
@@ -35,33 +35,28 @@ class Node(TaskSpecs):
 
     @gen.coroutine
     def run(self, on_finish, on_abort):
-        """Delegated by Task.return
-
-        Args:
-            on_finish(callable): Task.on_finish callback
-            on_abort(callable): Task.on_abort callback
-        """
+        """See `TaskSpecs.run`"""
         pass
 
     def on_submit(self):
-        """Delegated by Task.on_submit"""
+        """See `TaskSpecs.on_submit`"""
         self.merge_fields()
         self.update_params()
 
     def on_start(self):
-        """Delegated by Task.on_start"""
+        """See `TaskSpecs.on_start`"""
         pass
 
     def on_finish(self):
-        """Delegated by Task.on_finish"""
+        """See `TaskSpecs.on_finish`"""
         pass
 
     def interrupt(self):
-        """Delegated by Task.interrupt"""
+        """See `TaskSpecs.interrupt`"""
         pass
 
     def on_abort(self):
-        """Delegated by Task.on_abort"""
+        """See `TaskSpecs.on_abort`"""
         pass
 
     def add_in_edge(self, edge, port):
@@ -102,6 +97,15 @@ class Node(TaskSpecs):
 
 class IterNode(Node):
     """Iterator node (Synchronous worker) class
+
+    IterNode has IterEdge as the outgoing edge and sends iterator object
+    to the downstream. IterNode will synchronize incoming AsyncEdge and sends
+    list of records to the downstream. IterNode send map object to the
+    downstream if incoming FuncEdge has unapplied func and args.
+
+    IterNode itself does not change contents of data records. IterNode should
+    be inherited when you want to add some functionalities. Overriding IterNode.processor method may be a good practice to implement your own
+    input generator.
 
     Args:
         sampler(container.Sampler): record sampler
@@ -147,8 +151,11 @@ class IterNode(Node):
 
 class FuncNode(Node):
     """Function and args node class.
-    The node is intended for usage in multiprocess computing
-    so it should be picklable.
+
+    FuncNode sends function and arguments(records) to the downstrem. FuncNode
+    will synchronize incoming AsyncEdge and sends list of records and its own
+    function to the downstream. FuncNode.func should be picklable to be
+    compatible with multiprocess computing (see ConcurrentNode).
 
     Args:
         func: function to be applied.
@@ -193,6 +200,16 @@ class FuncNode(Node):
 
 class AsyncNode(Node):
     """Asynchronous worker node class.
+
+    AsyncNode has a AsyncEdge implemented with asynchronous queue. If the
+    incoming nodes have AsyncEdge, this will get records from the upstream
+    queue and put records to the downstream immediately, without blocking.
+    AsyncNode will asynchronize the incoming records if it is from sync edges
+    (IterEdge and FuncEdge).
+
+    AsyncNode itself does not change contents of data records. AsyncNode should
+    be inherited when you want to add some functionalities. Overriding AsyncNode.process_record method may be a good practice to implement your
+    own asynchronous worker nodes.
 
     Args:
         sampler(container.Sampler): record sampler

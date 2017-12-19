@@ -11,6 +11,16 @@ from flashflood.core.task import Task, TaskSpecs, InvalidOperationError
 
 
 class Workflow(TaskSpecs):
+    """Flashflood Workflow class
+
+    Parameters:
+        nodes(list): list of node numbers (Node.node_num)
+        tasks(list): list of tasks in order of execution
+        preds(dict): workflow graph connection (predecessors)
+        succs(dict): workflow graph connection (successors)
+        interval(float): worker thread loop interval
+        verbose(bool): if verbose output is generated or not
+    """
     def __init__(self):
         self.nodes = []
         self.tasks = []
@@ -55,10 +65,11 @@ class Workflow(TaskSpecs):
 
     def connect(self, up, down, up_port=0, down_port=0):
         """Adds a workflow connection
-            Args:
-                up: source node
-                down: target node
-                port: output port of source node
+
+        Args:
+            up: source node
+            down: target node
+            port: output port of source node
         """
         if up.node_num is None:
             up.node_num = len(self.nodes)
@@ -75,9 +86,10 @@ class Workflow(TaskSpecs):
 
     def append(self, node, up_port=0, down_port=0):
         """Adds a node connected to the latest added node
-            Args:
-                node: target node
-                port: output port of target node
+
+        Args:
+            node: target node
+            port: output port of target node
         """
         if node.node_num is not None:
             raise InvalidOperationError(
@@ -92,6 +104,8 @@ class Workflow(TaskSpecs):
             self.succs[latest][node.node_num] = down_port
 
     def build_workflow(self):
+        """Build workflow graph connection and determine order of execution.
+        """
         # TODO: catch exceptions on submit (ex. file path error, format error)
         if not self.nodes:
             raise InvalidOperationError("No nodes are registered")
@@ -114,9 +128,11 @@ class Workflow(TaskSpecs):
 
 
 class SubWorkflow(Workflow):
-    """
-    Keywords:
-        **kwargs
+    """Subworkflow object
+
+    Args:
+        node_ext(Node): node object for external connection
+        **kwargs: kwargs
     """
     def __init__(self, node_ext, **kwargs):
         super().__init__(**kwargs)
@@ -158,6 +174,12 @@ class SubWorkflow(Workflow):
         return self.node_ext.edge_type(edge)
 
     def set_entrance(self, node, port=0):
+        """Set node which connect to the upstream of the subworkflow
+
+        Args:
+            node(int): entrance node number
+            port(int): port which connect to the incoming edge
+        """
         if node.node_num is None:
             node.node_num = len(self.nodes)
             self.nodes.append(node)
@@ -165,6 +187,12 @@ class SubWorkflow(Workflow):
         self._entrance_port = port
 
     def set_exit(self, node, port=0):
+        """Set node which connect to the downstream of the subworkflow
+
+        Args:
+            node(int): exit node number
+            port(int): port which connect to the outgoing edge
+        """
         if node.node_num is None:
             node.node_num = len(self.nodes)
             self.nodes.append(node)

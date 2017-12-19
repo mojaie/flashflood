@@ -128,20 +128,32 @@ class Task(object):
 
 
 class TaskSpecs(object):
-    def run(self):
+    """Interface of Task implementation"""
+    def run(self, on_finish, on_abort):
+        """Implementation of Task.run
+
+        Args:
+            on_finish(callable): Task.on_finish callback
+            on_abort(callable): Task.on_abort callback
+        """
         raise NotImplementedError()
 
     def on_submit(self):
+        """Implementation of Task.on_submit"""
         raise NotImplementedError()
 
     def on_start(self):
+        """Implementation of Task.on_start"""
         raise NotImplementedError()
 
     def on_finish(self):
+        """Implementation of Task.on_finish"""
         raise NotImplementedError()
 
     def interrupt(self):
+        """Implementation of Task.interrupt"""
         raise NotImplementedError()
 
     def on_abort(self):
+        """Implementation of Task.on_abort"""
         raise NotImplementedError()

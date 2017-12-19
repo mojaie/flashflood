@@ -18,6 +18,27 @@ from flashflood.core.task import InvalidOperationError
 
 
 class ConcurrentNode(Node):
+    """Concurrent node
+
+    ConcurrentNode is similar to FuncNode but do parallel computation by using
+    given func and args. ConcurrentNode can have composite function passed from
+    upstream FuncNodes. If ConcurrentNode has own function, this will be
+    composed with upstream functions.
+
+    ConcurrentNode has AsyncEdge as an outgoing edge. Parallel job results are
+    sent to downstream using multiprocess queue. This does not guarantee same
+    record order as the original one.
+
+    ConcurrentNode can be used as a part of SubWorkflow
+
+    Args:
+        func(function): function to be applied
+        sampler(core.container.Sampler): Sampler object
+
+    Parameters:
+        func(function): function to be applied
+        queue(tornado.queues.Queue): multiprocess worker queue
+    """
     def __init__(self, func=None, sampler=None, **kwargs):
         super().__init__(**kwargs)
         self.func = func
@@ -94,6 +115,19 @@ class ConcurrentNode(Node):
 
 
 class ConcurrentFilter(ConcurrentNode):
+    """Concurrent filter node
+
+    ConcurrentFilter also does parallel computation by using given composed
+    function and arguments(records) but it will pass only not None records to
+    the downstream.
+
+    Args:
+        residue_counter(Counter): counter for records which are filtered out
+        **kwargs: kwargs
+
+    Parameters:
+        residue_counter(Counter): counter for records which are filtered out
+    """
     def __init__(self, residue_counter=None, **kwargs):
         super().__init__(**kwargs)
         self.residue_counter = residue_counter

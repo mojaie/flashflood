@@ -15,9 +15,11 @@ class IterEdge(object):
     """Synchronous data flow edge
 
     Attributes:
+        status (text): `ready`, `done` or `aborted`
         records (iterable): records store
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
+        sampler (Sampler): data sampler object
     """
     def __init__(self, sampler=None):
         self.status = "ready"
@@ -27,6 +29,14 @@ class IterEdge(object):
         self.sampler = sampler
 
     def send(self, rcds):
+        """Send records to the downstream.
+
+        This will bind upstream records to IterEdge.records. Then the
+        downstream node refers to the records.
+
+        Args:
+            rcds(iterable): iterator to be sent to the downstream
+        """
         if self.sampler is None:
             self.records = rcds
         else:
@@ -35,6 +45,9 @@ class IterEdge(object):
         self.status = "done"
 
     def abort(self):
+        """This will be called when the upstream abort signal was emitted.
+        Abort signal will be propageted until all tasks are completely stopped.
+        """
         self.status = "aborted"
 
 
@@ -46,6 +59,7 @@ class FuncEdge(object):
         records (iterable): records store
         fields (lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
+        sampler (Sampler): data sampler object
     """
     def __init__(self, sampler=None):
         self.status = "ready"
@@ -56,6 +70,15 @@ class FuncEdge(object):
         self.sampler = sampler
 
     def send(self, func, rcds):
+        """Send func and args to the downstream.
+
+        This will bind upstream records to IterEdge.records and IterEdge.func.
+        Then the downstream node refers to the records.
+
+        Args:
+            func(function): function to be applied
+            rcds(iterable): iterator to be sent to the downstream
+        """
         if self.sampler is None:
             self.func = func
             self.records = rcds
@@ -66,6 +89,9 @@ class FuncEdge(object):
         self.status = "done"
 
     def abort(self):
+        """This will be called when the upstream abort signal was emitted.
+        Abort signal will be propageted until all tasks are completely stopped.
+        """
         self.status = "aborted"
 
 
@@ -115,16 +141,16 @@ class AsyncEdge(object):
 
     @gen.coroutine
     def done(self):
-        """Waits until finish sending records to its downstream node.
-
-        This should be called by an upstream node when it is done."""
+        """Waits until all records are sent to its downstream node and then
+        emits done signal.
+        """
         yield self.queue.join()
         self.status = "done"
 
     @gen.coroutine
     def abort(self):
-        """Waits until finish sending records to its downstream node.
-
-        This should be called by an upstream node when it is aborted."""
+        """Waits until abort signal is propageted and all downstream tasks
+        are completely stopped. Then emits abort signal.
+        """
         yield self.queue.join()
         self.status = "aborted"
