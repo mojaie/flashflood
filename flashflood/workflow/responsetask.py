@@ -35,6 +35,7 @@ class ResponseTask(Task):
         fields = ListOfDict(self.specs.results.fields)
         new_fields = ListOfDict()
         fields.delete("key", "__moljson")
+        fields.delete("key", "__molobj")
         idx = fields.pick("key", "index")
         if idx:
             new_fields.add(idx)

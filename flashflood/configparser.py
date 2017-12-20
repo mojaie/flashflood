@@ -3,8 +3,6 @@ import glob
 import os
 import yaml
 
-from flashflood import sqliteconnection as sqlite
-from flashflood import static
 from flashflood.lod import ListOfDict
 
 
@@ -35,37 +33,15 @@ def user_passwd_matched(user, passwd):
     return user in USERS and passwd == USERS[user]["password"]
 
 
-def schema():
-    resources = ListOfDict()
-    # SQLite databases
-    for filename in glob.glob(
-            os.path.join(SQLITE_BASE_DIR, "*.sqlite3")):
-        conn = sqlite.Connection(filename)
-        data = conn.document()
-        for rsrc in data["resources"]:
-            rsrc["domain"] = data["domain"]
-            rsrc["resourceType"] = data["resourceType"]
-            rsrc["resourceFile"] = data["resourceFile"]
-            fields = ListOfDict(rsrc["fields"])
-            if rsrc["domain"] == "chemical":
-                fields.merge(static.MOL_DESC_FIELDS)
-                fields.delete("key", "__molobj")
-            rsrc["fields"] = fields
-        resources.extend(data["resources"])
-    # API schema
-    for filename in glob.glob(os.path.join(API_BASE_DIR, "*.yaml")):
-        with open(filename) as f:
-            doc = yaml.load(f.read())
-            resources.append(doc)
-    # Templates
-    templates = ListOfDict()
-    for tm in glob.glob(os.path.join(REPORT_TEMPLATE_DIR, "*.csv")):
-        templates.append({
-            "name": os.path.splitext(os.path.basename(tm))[0],
-            "sourceFile": os.path.basename(tm)
-        })
-    return {
-        "resources": resources,
-        "templates": templates,
-        "compoundIDPlaceholder": COMPID_PLACEHOLDER
-    }
+RESOURCES = ListOfDict()
+for filename in glob.glob(os.path.join(API_BASE_DIR, "*.yaml")):
+    with open(filename) as f:
+        rsrc = yaml.load(f.read())
+        RESOURCES.extend(rsrc)
+
+TEMPLATES = ListOfDict()
+for tm in glob.glob(os.path.join(REPORT_TEMPLATE_DIR, "*.csv")):
+    TEMPLATES.append({
+        "name": os.path.splitext(os.path.basename(tm))[0],
+        "sourceFile": os.path.basename(tm)
+    })

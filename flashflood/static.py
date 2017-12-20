@@ -7,7 +7,7 @@ from chorus.draw.svg import SVG
 
 from flashflood.lod import ListOfDict
 
-SCHEMA_VERSION = 0.8
+SCHEMA_VERSION = 0.10
 
 """ Option module availability """
 
@@ -34,6 +34,7 @@ PROCESSES = process.cpu_count()
 
 """ Field definition """
 
+# TODO: move to server_config?
 INDEX_FIELD = {"key": "index", "name": "Index", "d3_format": "d"}
 COMPID_FIELD = {"key": "compound_id", "name": "Compound ID",
                 "format": "compound_id"}
@@ -45,10 +46,12 @@ MOLOBJ_FIELD = {"key": "__molobj", "name": "Molecule object",
                 "format": "pyobject"}
 
 
+# TODO: Move to Chorus
 def mol_to_svg(mol):
     return SVG(mol).contents()
 
 
+# TODO: move to node.chem.descriptor?
 Descriptor = collections.namedtuple(
     "Descriptor", ("function", "name", "format_type", "format"))
 

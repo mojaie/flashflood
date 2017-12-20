@@ -13,6 +13,7 @@ from flashflood import static
 from flashflood.core.concurrent import ConcurrentFilter
 from flashflood.core.container import Container, Counter
 from flashflood.core.workflow import Workflow
+from flashflood.interface import sqlite
 from flashflood.node.chem.descriptor import AsyncMolDescriptor
 from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
 from flashflood.node.field.number import AsyncNumber
@@ -53,16 +54,18 @@ class ChemProp(Workflow):
         self.data_type = "nodes"
         desc = static.MOL_DESCS[query["key"]]
         if desc.format_type == "d3_format" or desc.format == "numeric":
-            vs = [float(v) for v in query["values"]]
+            v = float(query["value"])
         else:
-            vs = query["values"]
-        # TODO Is "IN" query necessary?
-        v = {True: vs, False: vs[0]}[query["operator"] == "in"]
+            v = query["value"]
         func = functools.partial(
             prop_filter, desc.function,
             OPERATORS[query["operator"]], v
         )
-        self.append(SQLiteReader(query, counter=self.input_size))
+        self.append(SQLiteReader(
+            [sqlite.find_resource(t) for t in query["targets"]],
+            fields=sqlite.merged_fields(query["targets"]),
+            counter=self.input_size
+        ))
         self.append(UnpickleMolecule())
         self.append(ConcurrentFilter(
             func=func, residue_counter=self.done_count))

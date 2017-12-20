@@ -20,8 +20,8 @@ from flashflood import excelexporter
 from flashflood import configparser as conf
 from flashflood import static
 from flashflood import auth
-from flashflood.sqlitehelper import SQLITE_HELPER as sq
 from flashflood.core.jobqueue import JobQueue
+from flashflood.interface import sqlite
 from flashflood.workflow import db
 from flashflood.workflow import similaritynetwork as simnet
 from flashflood.workflow import substructure as substr
@@ -50,7 +50,20 @@ class SchemaHandler(BaseHandler):
 
         :statuscode 200: no error
         """
-        self.write(conf.schema())
+        resources = []
+        for r in conf.RESOURCES:
+            # Server-side resource information
+            rsrc = r.copy()
+            rsrc.pop("resourceFile", None)
+            rsrc.pop("resourceType", None)
+            rsrc.pop("resourceURL", None)
+            rsrc.pop("table", None)
+            resources.append(rsrc)
+        self.write({
+            "resources": resources,
+            "templates": conf.TEMPLATES,
+            "compoundIDPlaceholder": conf.COMPID_PLACEHOLDER
+        })
 
 
 class WorkflowHandler(BaseHandler):
@@ -152,7 +165,7 @@ class StructurePreviewHandler(BaseHandler):
         """Structure image preview"""
         query = json.loads(self.get_argument("query"))
         try:
-            qmol = sq.query_mol(query)
+            qmol = sqlite.query_mol(query)
         except TypeError:
             response = '<span class="msg_warn">Format Error</span>'
         except ValueError:
