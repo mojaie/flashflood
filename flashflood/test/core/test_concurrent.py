@@ -41,8 +41,7 @@ class TestConcurrentNode(AsyncTestCase):
         task = Task(wf)
         yield task.execute()
         self.assertEqual(sum(i[0] for i in result.records), 90)
-        self.assertEqual(
-            len(set(i[1] for i in result.records)), static.PROCESSES)
+        self.assertGreater(len(set(i[1] for i in result.records)), 1)
         self.assertTrue(all(n.status == "done" for n in wf.tasks))
 
     @gen_test
@@ -56,8 +55,7 @@ class TestConcurrentNode(AsyncTestCase):
         task = Task(wf)
         yield task.execute()
         self.assertEqual(sum(i[0] for i in result.records), 25)
-        self.assertEqual(
-            len(set(i[1] for i in result.records)), static.PROCESSES)
+        self.assertGreater(len(set(i[1] for i in result.records)), 1)
         self.assertTrue(all(n.status == "done" for n in wf.tasks))
 
     @gen_test

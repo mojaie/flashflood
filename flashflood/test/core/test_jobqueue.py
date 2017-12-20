@@ -70,7 +70,8 @@ class TestJobQueue(AsyncTestCase):
         yield jq.abort(task1.id)
         while task1.status != "aborted":
             yield gen.sleep(0.01)
-        self.assertEqual(task2.status, "running")
+        while task2.status != "running":
+            yield gen.sleep(0.01)
         jq.abort(task2.id)
         while task2.status != "aborted":
             yield gen.sleep(0.01)

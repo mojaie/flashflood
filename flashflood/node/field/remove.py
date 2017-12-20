@@ -4,9 +4,22 @@
 # http://opensource.org/licenses/MIT
 #
 
-from flashflood.node.function.apply import Apply
+import functools
+
+from flashflood.core.node import FuncNode
 
 
-class RemoveFields(Apply):
-    # TODO:
-    pass
+def remove(key, row):
+    new_row = row.copy()
+    del new_row[key]
+    return new_row
+
+
+class RemoveField(FuncNode):
+    def __init__(self, key, **kwargs):
+        super().__init__(functools.partial(remove, key), **kwargs)
+        self.key = key
+
+    def merge_fields(self):
+        super().merge_fields()
+        self._out_edge.fields.delete("key", self.key)
