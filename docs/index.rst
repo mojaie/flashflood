@@ -23,8 +23,8 @@ Contents:
 .. toctree::
    :maxdepth: 1
 
-   introduction.rst
    getting_started.rst
+   build_workflow.rst
    http/http.rst
    api/api.rst
 

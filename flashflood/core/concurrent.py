@@ -35,7 +35,7 @@ class ConcurrentNode(Node):
         func(function): function to be applied
         sampler(core.container.Sampler): Sampler object
 
-    Parameters:
+    Attributes:
         func(function): function to be applied
         queue(tornado.queues.Queue): multiprocess worker queue
     """
@@ -125,7 +125,7 @@ class ConcurrentFilter(ConcurrentNode):
         residue_counter(Counter): counter for records which are filtered out
         **kwargs: kwargs
 
-    Parameters:
+    Attributes:
         residue_counter(Counter): counter for records which are filtered out
     """
     def __init__(self, residue_counter=None, **kwargs):

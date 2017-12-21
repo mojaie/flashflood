@@ -25,22 +25,22 @@ class Task(object):
     """Task interface
 
     Args:
-        specs(TaskSpecs): task implementation object
-        name(str): display name for verbose input
-        verbose(bool): shows verbose output or not
+        specs (TaskSpecs): task implementation object
+        name (str): display name for verbose input
+        verbose (bool): shows verbose output or not
 
-    Parameters:
-        specs(TaskSpecs): task implementation object
-        name(str): display name for verbose input
-        id(str): Task instance ID (UUID)
-        status: str
-            ready, running, done, aborted
-            interrupted: interrupted but the task is not yet aborted
-            cancelled: submitted but cancelled before start
-        creation_time(time): creation time
-        start_time(time): start time
-        finish_time(time): finish time
-        verbose(bool): shows verbose output or not
+    Attributes:
+        specs (TaskSpecs): task implementation object
+        name (str): display name for verbose input
+        id (str): Task instance ID (UUID)
+        status (str):
+            ``ready``, ``running``, ``done``, ``aborted``,
+            ``interrupted``: interrupted but the task is not yet aborted
+            ``cancelled``: submitted but cancelled before start
+        creation_time (time): creation time
+        start_time (time): start time
+        finish_time (time): finish time
+        verbose (bool): shows verbose output or not
     """
     def __init__(self, specs, name=None, verbose=False):
         if not isinstance(specs, TaskSpecs):

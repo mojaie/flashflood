@@ -16,14 +16,15 @@ class Node(TaskSpecs):
     """Node base class
 
     Args:
-        fields(ListOfDict): data fields
-        params(dict): workflow variable dict
+        fields (flashflood.lod.ListOfDict): data fields
+        params (dict): workflow variable dict
 
-    Parameters:
-        node_num(int): node number assigned by `Workflow`
-        fields(ListOfDict): data fields
-        params(dict): workflow variable dict
-        interval(float): worker thread loop interval
+    Attributes:
+        node_num (int): node ID number assigned by
+            `flashflood.core.workflow.Workflow`
+        fields (flashflood.lod.ListOfDict): data fields
+        params (dict): workflow variable dict
+        interval (float): worker thread loop interval time (in second)
     """
     def __init__(self, fields=None, params=None):
         self.node_num = None
@@ -35,35 +36,29 @@ class Node(TaskSpecs):
 
     @gen.coroutine
     def run(self, on_finish, on_abort):
-        """See `TaskSpecs.run`"""
         pass
 
     def on_submit(self):
-        """See `TaskSpecs.on_submit`"""
         self.merge_fields()
         self.update_params()
 
     def on_start(self):
-        """See `TaskSpecs.on_start`"""
         pass
 
     def on_finish(self):
-        """See `TaskSpecs.on_finish`"""
         pass
 
     def interrupt(self):
-        """See `TaskSpecs.interrupt`"""
         pass
 
     def on_abort(self):
-        """See `TaskSpecs.on_abort`"""
         pass
 
     def add_in_edge(self, edge, port):
         """Adds an incoming edge
 
         Args:
-            edge(core.edge.Edge): Edge object
+            edge(flashflood.core.edge.Edge): Edge object
             port(int): connection port
         """
         if port != 0:
@@ -108,7 +103,7 @@ class IterNode(Node):
     input generator.
 
     Args:
-        sampler(container.Sampler): record sampler
+        sampler (flashflood.core.container.Sampler): record sampler
         **kwargs: kwargs
     """
     def __init__(self, sampler=None, **kwargs):
@@ -159,7 +154,7 @@ class FuncNode(Node):
 
     Args:
         func: function to be applied.
-        sampler(container.Sampler): record sampler
+        sampler (flashflood.core.container.Sampler): record sampler
         **kwargs: kwargs
     """
     def __init__(self, func=functional.identity, sampler=None, **kwargs):
@@ -212,7 +207,7 @@ class AsyncNode(Node):
     own asynchronous worker nodes.
 
     Args:
-        sampler(container.Sampler): record sampler
+        sampler (flashflood.core.container.Sampler): record sampler
         **kwargs: kwargs
     """
     def __init__(self, sampler=None, **kwargs):

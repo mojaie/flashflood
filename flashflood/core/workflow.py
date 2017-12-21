@@ -11,15 +11,16 @@ from flashflood.core.task import Task, TaskSpecs, InvalidOperationError
 
 
 class Workflow(TaskSpecs):
-    """Flashflood Workflow class
+    """Flashflood workflow class
 
-    Parameters:
-        nodes(list): list of node numbers (Node.node_num)
-        tasks(list): list of tasks in order of execution
-        preds(dict): workflow graph connection (predecessors)
-        succs(dict): workflow graph connection (successors)
-        interval(float): worker thread loop interval
-        verbose(bool): if verbose output is generated or not
+    Attributes:
+        nodes (list): list of node numbers
+            (`flashflood.core.node.Node.node_num`)
+        tasks (list): list of tasks in order of execution
+        preds (dict): workflow graph connection (predecessors)
+        succs (dict): workflow graph connection (successors)
+        interval (float): worker thread loop interval time (in second)
+        verbose (bool): if verbose output is generated or not
     """
     def __init__(self):
         self.nodes = []
@@ -67,9 +68,10 @@ class Workflow(TaskSpecs):
         """Adds a workflow connection
 
         Args:
-            up: source node
-            down: target node
-            port: output port of source node
+            up (flashflood.core.node.Node): source node
+            down (flashflood.core.node.Node): target node
+            up_port (int): output port of the source node
+            down_port (int): input port of the target node
         """
         if up.node_num is None:
             up.node_num = len(self.nodes)
@@ -88,8 +90,9 @@ class Workflow(TaskSpecs):
         """Adds a node connected to the latest added node
 
         Args:
-            node: target node
-            port: output port of target node
+            node (flashflood.core.node.Node): target node
+            up_port (int): output port of the source node
+            down_port (int): input port of the target node
         """
         if node.node_num is not None:
             raise InvalidOperationError(
@@ -128,10 +131,11 @@ class Workflow(TaskSpecs):
 
 
 class SubWorkflow(Workflow):
-    """Subworkflow object
+    """Subworkflow class
 
     Args:
-        node_ext(Node): node object for external connection
+        node_ext (flashflood.core.node.Node): node object used for external
+            connection
         **kwargs: kwargs
     """
     def __init__(self, node_ext, **kwargs):
@@ -177,8 +181,8 @@ class SubWorkflow(Workflow):
         """Set node which connect to the upstream of the subworkflow
 
         Args:
-            node(int): entrance node number
-            port(int): port which connect to the incoming edge
+            node (int): entrance node number
+            port (int): port which connect to the incoming edge
         """
         if node.node_num is None:
             node.node_num = len(self.nodes)
@@ -190,8 +194,8 @@ class SubWorkflow(Workflow):
         """Set node which connect to the downstream of the subworkflow
 
         Args:
-            node(int): exit node number
-            port(int): port which connect to the outgoing edge
+            node (int): exit node number
+            port (int): port which connect to the outgoing edge
         """
         if node.node_num is None:
             node.node_num = len(self.nodes)

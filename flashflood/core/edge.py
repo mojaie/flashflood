@@ -15,11 +15,11 @@ class IterEdge(object):
     """Synchronous data flow edge
 
     Attributes:
-        status (text): `ready`, `done` or `aborted`
+        status (text): ``ready``, ``done`` or ``aborted``
         records (iterable): records store
-        fields (lod.ListOfDict): data fields
+        fields (flashflood.lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
-        sampler (Sampler): data sampler object
+        sampler (flashflood.core.container.Sampler): data sampler object
     """
     def __init__(self, sampler=None):
         self.status = "ready"
@@ -57,9 +57,9 @@ class FuncEdge(object):
     Attributes:
         func (callable): function to be applied
         records (iterable): records store
-        fields (lod.ListOfDict): data fields
+        fields (flashflood.lod.ListOfDict): data fields
         params (dict): optional parameters which will be sent to downstream
-        sampler (Sampler): data sampler object
+        sampler (flashflood.core.container.Sampler): data sampler object
     """
     def __init__(self, sampler=None):
         self.status = "ready"
@@ -99,12 +99,11 @@ class AsyncEdge(object):
     """Asynchronous data flow edge
 
     Attributes:
-        queue (tornado.queues.Queue): data queue
         status (str): edge status
-        fields (lod.ListOfDict): edge status
+        queue (tornado.queues.Queue): data queue
+        fields (flashflood.lod.ListOfDict): edge status
         params (dict): optional parameters which will be sent to downstream
-        task_count (int): number of tasks which should be processed
-        done_count (int): number of tasks which have been processed
+        sampler (flashflood.core.container.Sampler): data sampler object
 
     Status value is either of the items below
 

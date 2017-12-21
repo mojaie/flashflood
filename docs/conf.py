@@ -32,7 +32,8 @@ sys.path.insert(0, os.path.abspath('../'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
     'sphinxcontrib.napoleon'
 ]
 """
@@ -90,7 +91,8 @@ exclude_patterns = ['_build']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-#default_role = None
+primary_domain = 'py'
+default_role = 'py:obj'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 #add_function_parentheses = True
@@ -298,3 +300,8 @@ texinfo_documents = [
 
 # autodoc member ordering
 autodoc_member_order = 'bysource'
+autodoc_default_flags = ['members', 'show-inheritance']
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3.6/', None),
+}
