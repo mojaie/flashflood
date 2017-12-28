@@ -28,8 +28,14 @@ conda install --use-local flashflood
 ```
 
 
+Building workspace
+---------------------
 
-API Documentation
+see [flashflood-workspace-sample](https://github.com/mojaie/flashflood-workspace-sample)
+
+
+
+Documentation
 -------------------
 
 https://mojaie.github.io/flashflood

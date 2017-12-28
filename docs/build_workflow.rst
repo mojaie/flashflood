@@ -12,19 +12,23 @@ Building workflow
     from flashflood.node.reader.iterinput import IterInput
 
 
+    def twice(x):
+        return x * 2
+
+
     class TestWorkflow(Workflow):
         def __init__(self):
             super().__init__()
             self.output = Container()
             self.append(IterInput(range(100)))
-            self.append(FuncNode())
+            self.append(FuncNode(twice))
             self.append(ContainerWriter(output))
 
 
     if __name__ == '__main__':
         wf = TestWorkflow()
         task = Task(wf)
-        IOLoop.current().run_sync(task.execute())
+        IOLoop.current().run_sync(task.execute)
         print(wf.output.records)
 
 
