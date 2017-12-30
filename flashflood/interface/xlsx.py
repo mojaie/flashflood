@@ -35,17 +35,12 @@ EXPORT_OPTIONS = {
 def json_to_xlsx(data, opts=EXPORT_OPTIONS):
     """Export dataframe to Microsoft Excel worksheet(.xlsx).
 
-    This method uses Qt as SVG->PNG rendering engine.
-    It is recommended to execute this function in subprocess to avoid seg fault
-    unless the situation that Qt GUI thread is always running in background.
-    see flashflood.util.multiprocess
-
     Args:
-      json: JSON table object
-      opt: export setting dict
+      data (dict): JSON table object
+      opt (dict): export setting dict
 
     Returns:
-      io.BytesIO
+      io.BytesIO: binary I/O stream
     """
     buf = io.BytesIO()
     wb = Workbook(buf, opts["in_memory"])

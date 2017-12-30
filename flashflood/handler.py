@@ -16,12 +16,12 @@ from tornado import web, gen
 from tornado.ioloop import IOLoop
 from tornado.options import define, options, parse_command_line
 
-from flashflood import excelexporter
 from flashflood import configparser as conf
 from flashflood import static
 from flashflood import auth
 from flashflood.core.jobqueue import JobQueue
 from flashflood.interface import sqlite
+from flashflood.interface import xlsx
 from flashflood.workflow import db
 from flashflood.workflow import similaritynetwork as simnet
 from flashflood.workflow import substructure as substr
@@ -195,10 +195,11 @@ class SDFileExportHandler(BaseHandler):
     def post(self):
         js = json.loads(self.request.files['contents'][0]['body'].decode())
         cols = [c["key"] for c in js["fields"]
-                if c["visible"] and c["sortType"] != "none"]
+                if c["visible"] and c["format"] in (
+                    "text", "numeric", "d3_format", "compound_id")]
         mols = []
         for rcd in js["records"]:
-            mol = Compound(json.loads(rcd["__molobj"]))
+            mol = Compound(json.loads(rcd["__moljson"]))
             for col in cols:
                 mol.data[col] = rcd[col]
             mols.append(mol)
@@ -211,7 +212,7 @@ class ExcelExportHandler(BaseHandler):
     def post(self):
         js = json.loads(self.request.files['contents'][0]['body'].decode())
         data = {"tables": [js]}
-        buf = excelexporter.json_to_xlsx(data)
+        buf = xlsx.json_to_xlsx(data)
         self.set_header("Content-Type", 'application/vnd.openxmlformats-office\
                         document.spreadsheetml.sheet; charset="utf-8"')
         self.write(buf.getvalue())
