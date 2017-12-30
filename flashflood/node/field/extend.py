@@ -16,8 +16,9 @@ def extend(key, source_key, func, in_place, fill, row):
         new_row[key] = func(row[source_key])
     except KeyError:
         new_row[key] = fill
-    if in_place and key != source_key:
-        del new_row[source_key]
+    else:
+        if in_place and key != source_key:
+            del new_row[source_key]
     return new_row
 
 
