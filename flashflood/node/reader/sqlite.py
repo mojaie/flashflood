@@ -4,38 +4,67 @@
 # http://opensource.org/licenses/MIT
 #
 
+import itertools
+
+from flashflood.interface import sqlite
 from flashflood.node.reader.readerbase import ReaderBase
-from flashflood.sqlitehelper import SQLITE_HELPER as sq
 
 
 class SQLiteReader(ReaderBase):
-    def __init__(self, query, counter=None, **kwargs):
+    def __init__(self, tables, counter=None, **kwargs):
         super().__init__(**kwargs)
-        self.query = query
+        self.tables = tables
         self.counter = counter
-        self.fields.merge(sq.resource_fields(query["targets"]))
 
     def run(self, on_finish, on_abort):
-        if self.counter is not None:
-            self.counter.value = sq.record_count(self.query["targets"])
-        self._out_edge.send(sq.records_iter(self.query["targets"]))
+        rcds = []
+        for file_, table in self.tables:
+            conn = sqlite.Connection(file_)
+            rcds.append(conn.rows_iter(table))
+            if self.counter is not None:
+                self.counter.value += conn.rows_count(table)
+        self._out_edge.send(itertools.chain(*rcds))
         on_finish()
 
 
 class SQLiteReaderSearch(SQLiteReader):
+    def __init__(self, tables, key, values, **kwargs):
+        super().__init__(tables, **kwargs)
+        self.key = key
+        self.values = values
+
     def run(self, on_finish, on_abort):
-        self._out_edge.send(
-            sq.search(self.query["targets"], self.query["key"], v)
-            for v in self.query["values"]
-        )
+        rcds = []
+        for v in self.values:
+            for file_, table in self.tables:
+                conn = sqlite.Connection(file_)
+                found = conn.find_first(table, self.key, v)
+                if found:
+                    rcds.append(found)
+                    break
+                if self.counter is not None:
+                    self.counter.value += 1
+            else:
+                rcds.append({self.key: v})
+        self._out_edge.send(rcds)
         on_finish()
 
 
 class SQLiteReaderFilter(SQLiteReader):
+    def __init__(self, tables, key, value, operator, **kwargs):
+        super().__init__(tables, **kwargs)
+        self.key = key
+        self.value = value
+        self.operator = operator
+
     def run(self, on_finish, on_abort):
-        self._out_edge.send(sq.find_all(
-            self.query["targets"], self.query["key"],
-            self.query["values"], self.query["operator"],
-            fields=self.query.get("fields")
-        ))
+        rcds = []
+        for file_, table in self.tables:
+            conn = sqlite.Connection(file_)
+            found = conn.find_all(table, self.key, self.value, self.operator)
+            if self.counter is not None:
+                found = list(found)
+                self.counter.value += len(found)
+            rcds.append(found)
+        self._out_edge.send(itertools.chain(*rcds))
         on_finish()

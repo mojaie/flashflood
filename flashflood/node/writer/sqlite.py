@@ -4,7 +4,7 @@
 # http://opensource.org/licenses/MIT
 #
 
-import json
+import yaml
 import os
 import sqlite3
 import traceback
@@ -12,39 +12,23 @@ import warnings
 
 from tornado import gen
 
+from flashflood import static
 from flashflood.core.node import Node
 from flashflood.core.task import (
     InvalidOperationError, UnexpectedOperationWarning)
 from flashflood.util import debug
 
 
-data_type = {
-    "numeric": "real",
-    "id": "text",
-    "compound_id": "text",
-    "assay_id": "text",
-    "data_id": "text",
-    "svg": "text",
-    "json": "text",
-    "plot": "text",
-    "text": "text",
-    "pickle": "blob",
-    "pyobject": "blob",
-    "image": "blob",
-    "binary": "blob"
-}
-
-
 class SQLiteWriter(Node):
     def __init__(self, dest_path, primary_key=None, create_index=None,
-                 db_schema=None, allow_overwrite=True,
+                 schema_file=True, allow_overwrite=True,
                  notice_per_records=10000, **kwargs):
         super().__init__(**kwargs)
         self._in_edges = []
         self.dest_path = dest_path
         self.primary_key = primary_key
         self.create_index = create_index
-        self.db_schema = db_schema
+        self.schema_file = schema_file
         self.allow_overwrite = allow_overwrite
         self.notice_per_records = notice_per_records
         self.conn = None
@@ -134,20 +118,14 @@ class SQLiteWriter(Node):
             for result in self._results:
                 # Create table
                 phrases = []
-                table_name = result["params"]["sqlite_table_schema"]["table"]
+                table_name = result["params"]["sqlite_schema"]["table"]
                 for field in result["fields"]:
                     fieldphrase = field["key"]
-                    if "d3_format" in field:
-                        sqtype = "real"
-                    else:
-                        sqtype = data_type.get(field["format"], "blob")
-                    fieldphrase += " {}".format(sqtype)
                     if self.primary_key is not None and \
                             field["key"] == self.primary_key:
                         fieldphrase += " primary key check({} != '')".format(
                             self.primary_key)
-                    if sqtype == "text":
-                        fieldphrase += " collate nocase"
+                    fieldphrase += " collate nocase"
                     phrases.append(fieldphrase)
                 fielddef = ", ".join(phrases)
                 sql = "CREATE TABLE {}({})".format(table_name, fielddef)
@@ -173,17 +151,6 @@ class SQLiteWriter(Node):
                         cur.execute("CREATE INDEX {}_{} ON {}({})".format(
                             table_name, k, table_name, k))
                         print("Create index {}_{} ...".format(table_name, k))
-            # Save database schema
-            if self.db_schema is not None:
-                schema = self.db_schema
-                schema["resources"] = []
-                for result in self._results:
-                    table_schema = result["params"]["sqlite_table_schema"]
-                    table_schema["fields"] = result["fields"]
-                    schema["resources"].append(table_schema)
-                cur.execute("CREATE TABLE document(document text)")
-                cur.execute(
-                    "INSERT INTO document VALUES (?)", (json.dumps(schema),))
         except KeyboardInterrupt:
             print("User cancel")
             self.conn.rollback()
@@ -195,6 +162,20 @@ class SQLiteWriter(Node):
             self.conn.close()
             on_abort()
         else:
+            if self.schema_file:
+                dest = self.dest_path.replace(".sqlite3", ".yaml")
+                schema = []
+                for result in self._results:
+                    rsrc = result["params"]["sqlite_schema"]
+                    rsrc["resourceType"] = "sqlite"
+                    fields = result["fields"]
+                    if rsrc["domain"] == "chemical":
+                        fields.merge(static.MOL_DESC_FIELDS)
+                        fields.delete("key", "__molpickle")
+                    rsrc["fields"] = list(fields)
+                    schema.append(rsrc)
+                with open(dest, "w") as f:
+                    yaml.dump(schema, f)
             self.conn.commit()
             print("Cleaning up...")
             cur.execute("VACUUM")
