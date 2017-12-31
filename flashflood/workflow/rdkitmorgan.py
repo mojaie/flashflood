@@ -25,7 +25,7 @@ from flashflood.node.writer.container import ContainerWriter
 
 
 def rdmorgan_filter(qmol, params, row):
-    mol = Compound(json.loads(row["__molobj"]))
+    mol = row["__molobj"]
     try:
         score = rdkit.morgan_sim(mol, qmol, radius=2)  # ECFP4 equivalent
     except:
