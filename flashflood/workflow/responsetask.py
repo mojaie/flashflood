@@ -34,16 +34,17 @@ class ResponseTask(Task):
     def set_fields(self):
         fields = ListOfDict(self.specs.results.fields)
         new_fields = ListOfDict()
-        fields.delete("key", "__moljson")
-        fields.delete("key", "__molobj")
         idx = fields.pick("key", "index")
         if idx:
             new_fields.add(idx)
         struct = fields.pick("key", "structure")
         if struct:
             new_fields.add(struct)
-        new_fields.merge(fields)
         # set hidden fields
+        for f in fields:
+            if not f["key"].startswith("__"):
+                new_fields.add(f)
+        # set default invisible fields
         for f in new_fields:
             if f["key"].startswith("_"):
                 f["visible"] = False

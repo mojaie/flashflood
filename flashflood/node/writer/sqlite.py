@@ -16,6 +16,7 @@ from flashflood import static
 from flashflood.core.node import Node
 from flashflood.core.task import (
     InvalidOperationError, UnexpectedOperationWarning)
+from flashflood.lod import ListOfDict
 from flashflood.util import debug
 
 
@@ -168,10 +169,12 @@ class SQLiteWriter(Node):
                 for result in self._results:
                     rsrc = result["params"]["sqlite_schema"]
                     rsrc["resourceType"] = "sqlite"
-                    fields = result["fields"]
+                    fields = ListOfDict()
+                    for f in result["fields"]:
+                        if not f["key"].startswith("__"):
+                            fields.add(f)
                     if rsrc["domain"] == "chemical":
                         fields.merge(static.MOL_DESC_FIELDS)
-                        fields.delete("key", "__molpickle")
                     rsrc["fields"] = list(fields)
                     schema.append(rsrc)
                 with open(dest, "w") as f:
