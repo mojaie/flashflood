@@ -4,6 +4,8 @@
 # http://opensource.org/licenses/MIT
 #
 
+import pickle
+
 from tornado import gen
 
 from flashflood import functional
@@ -162,7 +164,10 @@ class FuncNode(Node):
         self._out_edge = FuncEdge(sampler)
         self.func = func
         self._rcds_tmp = None
-        # TODO: pickle test
+        try:
+            pickle.dumps(self.func)
+        except (AttributeError, TypeError):
+            raise InvalidOperationError("FuncNode.func should be picklable")
 
     @gen.coroutine
     def run(self, on_finish, on_abort):

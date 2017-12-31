@@ -5,6 +5,7 @@
 #
 
 from concurrent import futures as cf
+import pickle
 # import threading
 
 from tornado import gen
@@ -47,6 +48,12 @@ class ConcurrentNode(Node):
         self._interrupted = False
         self._cfunc = None
         self._cargs = None
+        if self.func is not None:
+            try:
+                pickle.dumps(self.func)
+            except (AttributeError, TypeError):
+                raise InvalidOperationError(
+                    "ConcurrentNode.func should be picklable")
 
     @gen.coroutine
     def run(self, on_finish, on_abort):

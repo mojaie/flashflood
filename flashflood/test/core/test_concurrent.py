@@ -10,11 +10,10 @@ import unittest
 from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test
 
-from flashflood import static
 from flashflood.core.concurrent import ConcurrentNode, ConcurrentFilter
 from flashflood.core.container import Container
 from flashflood.core.node import FuncNode
-from flashflood.core.task import Task
+from flashflood.core.task import Task, InvalidOperationError
 from flashflood.core.workflow import Workflow, SubWorkflow
 from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.writer.container import ContainerWriter
@@ -32,6 +31,10 @@ def odd(x):
 class TestConcurrentNode(AsyncTestCase):
     @gen_test
     def test_concurrent(self):
+        with self.assertRaises(InvalidOperationError):
+            ConcurrentNode(lambda x: x)
+        with self.assertRaises(InvalidOperationError):
+            ConcurrentNode(self)
         wf = Workflow()
         wf.interval = 0.01
         result = Container()

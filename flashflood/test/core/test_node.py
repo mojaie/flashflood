@@ -11,7 +11,7 @@ from tornado.testing import AsyncTestCase, gen_test
 
 from flashflood.core.container import Container
 from flashflood.core.node import IterNode, FuncNode, AsyncNode
-from flashflood.core.task import Task
+from flashflood.core.task import Task, InvalidOperationError
 from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.writer.container import ContainerWriter
 
@@ -46,6 +46,10 @@ class TestNode(AsyncTestCase):
 
     @gen_test
     def test_funcnode(self):
+        with self.assertRaises(InvalidOperationError):
+            FuncNode(lambda x: x)
+        with self.assertRaises(InvalidOperationError):
+            FuncNode(self)
         container = Container()
         iter_in = IterInput(range(10))
         itert = Task(iter_in)

@@ -3,7 +3,7 @@ import collections
 
 from tornado import process
 from chorus import molutil, wclogp
-from chorus.draw.svg import SVG
+from chorus.draw.svg import mol_to_svg
 
 from flashflood.lod import ListOfDict
 
@@ -46,11 +46,6 @@ MOLOBJ_FIELD = {"key": "__molobj", "name": "Molecule object",
                 "format": "pyobject"}
 
 
-# TODO: Move to Chorus
-def mol_to_svg(mol):
-    return SVG(mol).contents()
-
-
 # TODO: move to node.chem.descriptor?
 Descriptor = collections.namedtuple(
     "Descriptor", ("function", "name", "format_type", "format"))
@@ -66,7 +61,7 @@ MOL_DESCS = collections.OrderedDict([
                          "d3_format", "d"))
 ])
 
-MOL_DESC_KEYS = MOL_DESCS.keys()
+MOL_DESC_KEYS = list(MOL_DESCS.keys())  # OrderedDict.key is not picklable
 MOL_DESC_FIELDS = ListOfDict({
     "key": key, "name": desc.name, desc.format_type: desc.format
 } for key, desc in MOL_DESCS.items())
