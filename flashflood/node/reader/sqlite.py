@@ -42,10 +42,10 @@ class SQLiteReaderSearch(SQLiteReader):
                 if found:
                     rcds.append(found)
                     break
-                if self.counter is not None:
-                    self.counter.value += 1
             else:
                 rcds.append({self.key: v})
+        if self.counter is not None:
+            self.counter.value += len(self.values)
         self._out_edge.send(rcds)
         on_finish()
 

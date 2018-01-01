@@ -37,7 +37,9 @@ class Connection(object):
     def fetch_one(self, query, values=()):
         """Execute custom fetch query"""
         self._cursor.execute(query, values)
-        return dict(self._cursor.fetchone())
+        row = self._cursor.fetchone()
+        if row is not None:
+            return dict(row)
 
     def rows_iter(self, table, orderby=None, arraysize=1000):
         """Iterate over rows of tables"""
