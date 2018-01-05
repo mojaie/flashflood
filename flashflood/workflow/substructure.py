@@ -25,21 +25,18 @@ from flashflood.node.writer.container import ContainerWriter
 
 
 def exact_filter(qmol, params, row):
-    if substructure.equal(
-            row["__molobj"], qmol, ignore_hydrogen=params["ignoreHs"]):
-        return row
+    return substructure.equal(
+            row["__molobj"], qmol, ignore_hydrogen=params["ignoreHs"])
 
 
 def substr_filter(qmol, params, row):
-    if substructure.substructure(
-            row["__molobj"], qmol, ignore_hydrogen=params["ignoreHs"]):
-        return row
+    return substructure.substructure(
+            row["__molobj"], qmol, ignore_hydrogen=params["ignoreHs"])
 
 
 def supstr_filter(qmol, params, row):
-    if substructure.substructure(
-            qmol, row["__molobj"], ignore_hydrogen=params["ignoreHs"]):
-        return row
+    return substructure.substructure(
+            qmol, row["__molobj"], ignore_hydrogen=params["ignoreHs"])
 
 
 class ExactStruct(Workflow):
@@ -51,7 +48,7 @@ class ExactStruct(Workflow):
         self.input_size = Counter()
         self.data_type = "nodes"
         qmol = sqlite.query_mol(query["queryMol"])
-        func = functools.partial(exact_filter, qmol, query["params"])
+        pred = functools.partial(exact_filter, qmol, query["params"])
         self.append(SQLiteReaderFilter(
             [sqlite.find_resource(t) for t in query["targets"]],
             "_mw_wo_sw", molutil.mw(qmol), "=",
@@ -59,7 +56,7 @@ class ExactStruct(Workflow):
         ))
         self.append(CountRows(self.input_size))
         self.append(UnpickleMolecule())
-        self.append(Filter(func=func, residue_counter=self.done_count))
+        self.append(Filter(pred, residue_counter=self.done_count))
         self.append(MolDescriptor(static.MOL_DESC_KEYS))
         self.append(MoleculeToJSON())
         self.append(Number("index", fields=[static.INDEX_FIELD]))
@@ -76,15 +73,14 @@ class Substruct(Workflow):
         self.input_size = Counter()
         self.data_type = "nodes"
         qmol = sqlite.query_mol(query["queryMol"])
-        func = functools.partial(substr_filter, qmol, query["params"])
+        pred = functools.partial(substr_filter, qmol, query["params"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
-        self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count))
+        self.append(ConcurrentFilter(pred, residue_counter=self.done_count))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))
@@ -101,15 +97,14 @@ class Superstruct(Workflow):
         self.input_size = Counter()
         self.data_type = "nodes"
         qmol = sqlite.query_mol(query["queryMol"])
-        func = functools.partial(supstr_filter, qmol, query["params"])
+        pred = functools.partial(supstr_filter, qmol, query["params"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
-        self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count))
+        self.append(ConcurrentFilter(pred, residue_counter=self.done_count))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))

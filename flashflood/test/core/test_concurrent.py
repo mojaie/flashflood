@@ -23,9 +23,12 @@ def twice(x):
     return (x * 2, current_process().name)
 
 
+def which_process(x):
+    return (x, current_process().name)
+
+
 def odd(x):
-    if x % 2:
-        return (x, current_process().name)
+    return x[0] % 2
 
 
 class TestConcurrentNode(AsyncTestCase):
@@ -53,7 +56,7 @@ class TestConcurrentNode(AsyncTestCase):
         wf.interval = 0.01
         result = Container()
         wf.append(IterInput(range(10)))
-        wf.append(ConcurrentFilter(func=odd))
+        wf.append(ConcurrentFilter(odd, func=which_process))
         wf.append(ContainerWriter(result))
         task = Task(wf)
         yield task.execute()

@@ -15,6 +15,7 @@ from flashflood.core.container import Container, Counter
 from flashflood.core.node import FuncNode
 from flashflood.core.workflow import Workflow
 from flashflood.node.chem.molecule import MoleculeFromJSON
+from flashflood.node.control.filter import Filter
 from flashflood.node.monitor.count import AsyncCountRows
 from flashflood.node.reader.iterinput import IterInput
 from flashflood.node.transform.combination import Combination
@@ -28,66 +29,76 @@ GRAPH_FIELDS = [
 ]
 
 
-def gls_filter(params, pair):
-    row1, row2 = pair
-    thld = float(params["threshold"])
-    sm, bg = sorted((row1["array"][1], row2["array"][1]))
-    if sm < bg * thld:  # threshold filter
-        return
-    res = mcsdr.local_sim(row1["array"], row2["array"])
-    if res["local_sim"] >= thld:
-        row = {
-            "source": row1["index"],
-            "target": row2["index"],
-            "weight": res["local_sim"]
-        }
-        return row
+def molsize_prefilter(cutoff, rcd):
+    return len(rcd["__molobj"]) <= cutoff
 
 
-def morgan_filter(params, pair):
-    row1, row2 = pair
-    thld = float(params["threshold"])
-    sim = rdkit.morgan_sim(row1["mol"], row2["mol"], radius=2)
-    if sim >= thld:
-        row = {
-            "source": row1["index"],
-            "target": row2["index"],
-            "weight": sim
-        }
-        return row
-
-
-def fmcs_filter(params, pair):
-    row1, row2 = pair
-    thld = float(params["threshold"])
-    res = rdkit.fmcs(row1["mol"], row2["mol"], timeout=params["timeout"])
-    if res["similarity"] >= thld:
-        row = {
-            "source": row1["index"],
-            "target": row2["index"],
-            "weight": res["similarity"],
-            "canceled": res["canceled"]
-        }
-        return row
-
-
-def gls_array(params, rcd):
-    if params["ignoreHs"]:
+def gls_array(ignoreHs, diam, tree, rcd):
+    arr_rcd = {"index": rcd["index"]}
+    if ignoreHs:
         mol = molutil.make_Hs_implicit(rcd["__molobj"])
     else:
         mol = rcd["__molobj"]
-    diam = int(params["diameter"])
-    tree = int(params["maxTreeSize"])
-    arr = mcsdr.comparison_array(mol, diam, tree)
-    return {"index": rcd["index"], "array": arr}
+    try:
+        arr = mcsdr.comparison_array(mol, diam, tree)
+    except ValueError:
+        pass
+    else:
+        arr_rcd["array"] = arr
+    return arr_rcd
 
 
-def rdkit_mol(params, rcd):
-    if params["ignoreHs"]:
+def gls_prefilter(thld, pair):
+    rcd1, rcd2 = pair
+    if "array" not in rcd1:
+        return False
+    if "array" not in rcd2:
+        return False
+    sm, bg = sorted((rcd1["array"][1], rcd2["array"][1]))
+    return sm >= bg * thld
+
+
+def gls_calc(pair):
+    row1, row2 = pair
+    res = mcsdr.local_sim(row1["array"], row2["array"])
+    return {
+        "source": row1["index"],
+        "target": row2["index"],
+        "weight": res["local_sim"]
+    }
+
+
+def rdkit_mol(ignoreHs, rcd):
+    if ignoreHs:
         mol = molutil.make_Hs_implicit(rcd["__molobj"])
     else:
         mol = rcd["__molobj"]
     return {"index": rcd["index"], "mol": mol}
+
+
+def morgan_calc(radius, pair):
+    row1, row2 = pair
+    score = rdkit.morgan_sim(row1["mol"], row2["mol"], radius=radius)
+    return {
+        "source": row1["index"],
+        "target": row2["index"],
+        "weight": score
+    }
+
+
+def fmcs_calc(timeout, pair):
+    row1, row2 = pair
+    res = rdkit.fmcs(row1["mol"], row2["mol"], timeout=timeout)
+    return {
+        "source": row1["index"],
+        "target": row2["index"],
+        "weight": res["similarity"],
+        "canceled": res["canceled"]
+    }
+
+
+def thld_filter(thld, row):
+    return row["weight"] >= thld
 
 
 class GLSNetwork(Workflow):
@@ -99,12 +110,22 @@ class GLSNetwork(Workflow):
         self.input_size = Counter()
         self.data_type = "edges"
         self.reference = {"nodes": contents["id"]}
+        ignoreHs = params["ignoreHs"]
+        thld = float(params["threshold"])
+        diam = int(params["diameter"])
+        tree = int(params["maxTreeSize"])
+        cutoff = int(params["molSizeCutoff"])
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FuncNode(functools.partial(gls_array, params)))
+        self.append(Filter(functools.partial(molsize_prefilter, cutoff)))
+        self.append(FuncNode(
+            functools.partial(gls_array, ignoreHs, diam, tree)
+        ))
         self.append(Combination(counter=self.input_size))
+        self.append(Filter(functools.partial(gls_prefilter, thld)))
         self.append(ConcurrentFilter(
-            func=functools.partial(gls_filter, params),
+            functools.partial(thld_filter, thld),
+            func=functools.partial(gls_calc),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))
@@ -122,10 +143,12 @@ class RDKitMorganNetwork(Workflow):
         self.reference = {"nodes": contents["id"]}
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FuncNode(functools.partial(rdkit_mol, params)))
+        self.append(FuncNode(functools.partial(rdkit_mol, params["ignoreHs"])))
         self.append(Combination(counter=self.input_size))
+        # radius=2 is ECFP4 equivalent
         self.append(ConcurrentFilter(
-            func=functools.partial(morgan_filter, params),
+            functools.partial(thld_filter, float(params["threshold"])),
+            func=functools.partial(morgan_calc, 2),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))
@@ -143,10 +166,11 @@ class RDKitFMCSNetwork(Workflow):
         self.reference = {"nodes": contents["id"]}
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FuncNode(functools.partial(rdkit_mol, params)))
+        self.append(FuncNode(functools.partial(rdkit_mol, params["ignoreHs"])))
         self.append(Combination(counter=self.input_size))
         self.append(ConcurrentFilter(
-            func=functools.partial(fmcs_filter, params),
+            functools.partial(thld_filter, float(params["threshold"])),
+            func=functools.partial(fmcs_calc, float(params["timeout"])),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))

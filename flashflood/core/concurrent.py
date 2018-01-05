@@ -5,6 +5,7 @@
 #
 
 from concurrent import futures as cf
+import functools
 import pickle
 # import threading
 
@@ -121,6 +122,11 @@ class ConcurrentNode(Node):
             self.queue.task_done()
 
 
+def filter_(pred, arg):
+    if pred(arg):
+        return arg
+
+
 class ConcurrentFilter(ConcurrentNode):
     """Concurrent filter node
 
@@ -135,13 +141,18 @@ class ConcurrentFilter(ConcurrentNode):
     Attributes:
         residue_counter(Counter): counter for records which are filtered out
     """
-    def __init__(self, residue_counter=None, **kwargs):
+    def __init__(self, pred, residue_counter=None, **kwargs):
         super().__init__(**kwargs)
+        f = functools.partial(filter_, pred)
+        if self.func is None:
+            self.func = f
+        else:
+            self.func = functional.compose(f, self.func)
         self.residue_counter = residue_counter
 
     @gen.coroutine
     def on_task_done(self, record):
-        if record:
+        if record is not None:
             yield self._out_edge.put(record)
         elif self.residue_counter is not None:
             self.residue_counter.value += 1

@@ -17,8 +17,7 @@ from flashflood.node.writer.container import ContainerWriter
 
 
 def f(x):
-    if x % 2:
-        return x
+    return x % 2
 
 
 class TestFilter(AsyncTestCase):

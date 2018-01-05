@@ -7,41 +7,61 @@
 import functools
 
 from chorus import mcsdr
+from chorus import molutil
 
 from flashflood import static
 from flashflood.core.concurrent import ConcurrentFilter
 from flashflood.core.container import Container, Counter
+from flashflood.core.node import FuncNode
 from flashflood.core.workflow import Workflow
 from flashflood.interface import sqlite
 from flashflood.node.chem.descriptor import AsyncMolDescriptor
 from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
+from flashflood.node.control.filter import Filter
 from flashflood.node.field.number import AsyncNumber
 from flashflood.node.monitor.count import AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import ContainerWriter
 
 
-def mcsdr_filter(qmolarr, params, row):
-    # TODO: Need to refactor
-    type_ = {"sim": "local_sim", "edge": "mcsdr_edges"}
-    if len(row["__molobj"]) > params["molSizeCutoff"]:  # mol size filter
-        return
+def molsize_prefilter(cutoff, rcd):
+    return len(rcd["__molobj"]) <= cutoff
+
+
+def gls_array(ignoreHs, diam, tree, rcd):
+    if ignoreHs:
+        mol = molutil.make_Hs_implicit(rcd["__molobj"])
+    else:
+        mol = rcd["__molobj"]
     try:
-        arr = mcsdr.comparison_array(
-            row["__molobj"], params["diameter"], params["maxTreeSize"])
+        arr = mcsdr.comparison_array(mol, diam, tree)
     except ValueError:
-        return
-    sm, bg = sorted([arr[1], qmolarr[1]])
-    thld = float(params["threshold"])
-    if params["measure"] == "sim" and sm < bg * thld:
-        return  # threshold filter
-    if params["measure"] == "edge" and sm < thld:
-        return  # fragment size filter
-    res = mcsdr.local_sim(arr, qmolarr)
-    if res[type_[params["measure"]]] >= thld:
-        row["local_sim"] = res["local_sim"]
-        row["mcsdr"] = res["mcsdr_edges"]
-        return row
+        pass
+    else:
+        rcd["array"] = arr
+    return rcd
+
+
+def gls_prefilter(thld, measure, qarr, rcd):
+    if "array" not in rcd:
+        return False
+    sm, bg = sorted((qarr[1], rcd["array"][1]))
+    if measure == "sim":
+        return sm >= bg * thld
+    elif measure == "edge":
+        return sm >= thld
+
+
+def gls_calc(qarr, rcd):
+    res = mcsdr.local_sim(qarr, rcd["array"])
+    rcd["local_sim"] = res["local_sim"]
+    rcd["mcsdr"] = res["mcsdr_edges"]
+    return rcd
+
+
+def thld_filter(thld, measure, rcd):
+    type_ = {"sim": "local_sim", "edge": "mcsdr"}
+    return rcd[type_[measure]] >= thld
 
 
 class GLS(Workflow):
@@ -52,18 +72,29 @@ class GLS(Workflow):
         self.done_count = Counter()
         self.input_size = Counter()
         self.data_type = "nodes"
+        measure = query["params"]["measure"]
+        ignoreHs = query["params"]["ignoreHs"]
+        thld = float(query["params"]["threshold"])
+        diam = int(query["params"]["diameter"])
+        tree = int(query["params"]["maxTreeSize"])
+        cutoff = int(query["params"]["molSizeCutoff"])
         qmol = sqlite.query_mol(query["queryMol"])
-        qmolarr = mcsdr.comparison_array(
-            qmol, query["params"]["diameter"], query["params"]["maxTreeSize"])
-        func = functools.partial(mcsdr_filter, qmolarr, query["params"])
+        qarr = mcsdr.comparison_array(qmol, diam, tree)
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
+        self.append(Filter(functools.partial(molsize_prefilter, cutoff)))
+        self.append(FuncNode(
+            functools.partial(gls_array, ignoreHs, diam, tree)))
+        self.append(Filter(
+            functools.partial(gls_prefilter, thld, measure, qarr)))
         self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count,
+            functools.partial(thld_filter, thld, measure),
+            func=functools.partial(gls_calc, qarr),
+            residue_counter=self.done_count,
             fields=[
                 {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
                 {"key": "local_sim", "name": "GLS", "d3_format": ".2f"}

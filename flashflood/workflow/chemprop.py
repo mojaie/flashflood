@@ -29,19 +29,18 @@ def like_operator(a, b):
 
 OPERATORS = {
     "eq": operator.eq, "gt": operator.gt, "lt": operator.lt,
-    "ge": operator.ge, "le": operator.le,
-    "lk": like_operator, "in": lambda a, b: a in b
+    "ge": operator.ge, "le": operator.le, "lk": like_operator
 }
 
 
 def prop_filter(func, op, val, row):
     try:
-        valid = op(func(row["__molobj"]), val)
+        res = op(func(row["__molobj"]), val)
     except TypeError as e:
         print(e, row["compound_id"], val)
+        return False
     else:
-        if valid:
-            return row
+        return res
 
 
 class ChemProp(Workflow):
@@ -57,10 +56,6 @@ class ChemProp(Workflow):
             v = float(query["value"])
         else:
             v = query["value"]
-        func = functools.partial(
-            prop_filter, desc.function,
-            OPERATORS[query["operator"]], v
-        )
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
@@ -68,7 +63,9 @@ class ChemProp(Workflow):
         ))
         self.append(UnpickleMolecule())
         self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count))
+            functools.partial(prop_filter, desc.function,
+                              OPERATORS[query["operator"]], v),
+            residue_counter=self.done_count))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))

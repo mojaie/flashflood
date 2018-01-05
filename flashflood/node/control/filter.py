@@ -10,33 +10,31 @@ from flashflood.core.node import IterNode, AsyncNode
 
 
 class Filter(IterNode):
-    def __init__(self, func, residue_counter=None, **kwargs):
+    def __init__(self, pred, residue_counter=None, **kwargs):
         super().__init__(**kwargs)
-        self.func = func
+        self.pred = pred
         self.residue_counter = residue_counter
 
     def processor(self, rcds):
         for r in rcds:
-            result = self.func(r)
-            if result:
-                yield result
+            if self.pred(r):
+                yield r
             elif self.residue_counter is not None:
                 self.residue_counter.value += 1
 
 
 class AsyncFilter(AsyncNode):
-    def __init__(self, func, residue_counter=None, **kwargs):
+    def __init__(self, pred, residue_counter=None, **kwargs):
         super().__init__(**kwargs)
-        self.func = func
+        self.pred = pred
         self.residue_counter = residue_counter
 
     @gen.coroutine
     def async_loop(self):
         while 1:
             in_ = yield self._in_edge.get()
-            result = self.func(in_)
-            if result:
-                yield self._out_edge.put(result)
+            if self.pred(in_):
+                yield self._out_edge.put(in_)
             elif self.residue_counter is not None:
                 self.residue_counter.value += 1
 
@@ -49,9 +47,8 @@ class AsyncFilter(AsyncNode):
         for in_ in rcds:
             if self.status == "interrupted":
                 return
-            result = self.func(in_)
-            if result:
-                yield self._out_edge.put(result)
+            if self.pred(in_):
+                yield self._out_edge.put(in_)
             elif self.residue_counter is not None:
                 self.residue_counter.value += 1
         yield self._out_edge.done()

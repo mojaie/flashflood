@@ -22,18 +22,20 @@ from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import ContainerWriter
 
 
-def rdfmcs_filter(qmol, params, row):
-    type_ = {"sim": "similarity", "edge": "mcs_edges"}
+def rdfmcs_calc(qmol, timeout, row):
     try:
-        res = rdkit.fmcs(row["__molobj"], qmol, timeout=params["timeout"])
+        res = rdkit.fmcs(row["__molobj"], qmol, timeout=timeout)
     except:
         print(traceback.format_exc())
         return
-    thld = float(params["threshold"])
-    if res[type_[params["measure"]]] >= thld:
-        row["fmcs_sim"] = res["similarity"]
-        row["fmcs_edges"] = res["mcs_edges"]
-        return row
+    row["fmcs_sim"] = res["similarity"]
+    row["fmcs_edges"] = res["mcs_edges"]
+    return row
+
+
+def thld_filter(thld, measure, row):
+    type_ = {"sim": "fmcs_sim", "edge": "fmcs_edges"}
+    return row[type_[measure]] >= thld
 
 
 class RDKitFMCS(Workflow):
@@ -48,16 +50,18 @@ class RDKitFMCS(Workflow):
             {"key": "fmcs_sim", "name": "MCS similarity", "d3_format": ".2f"},
             {"key": "fmcs_edges", "name": "MCS size", "d3_format": "d"}
         ])
-        qmol = sqlite.query_mol(query["queryMol"])
-        func = functools.partial(rdfmcs_filter, qmol, query["params"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
+        qmol = sqlite.query_mol(query["queryMol"])
         self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count))
+            functools.partial(
+                thld_filter, float(query["threshold"]), query["measure"]),
+            func=functools.partial(rdfmcs_calc, qmol, float(query["timeout"])),
+            residue_counter=self.done_count))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))

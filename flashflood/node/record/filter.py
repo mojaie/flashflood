@@ -10,14 +10,14 @@ from flashflood.node.control.filter import Filter, AsyncFilter
 
 
 class FilterRecords(Filter):
-    def __init__(self, key, value, filter_operator=operator.eq, **kwargs):
+    def __init__(self, key, value, operator=operator.eq, **kwargs):
         super().__init__(
-            lambda x: filter_operator(x[key], value),
+            lambda x: operator(x[key], value),
             residue_counter=None, fields=None, **kwargs)
 
 
 class AsyncFilterRecords(AsyncFilter):
-    def __init__(self, key, value, filter_operator=operator.eq, **kwargs):
+    def __init__(self, key, value, operator=operator.eq, **kwargs):
         super().__init__(
-            lambda x: filter_operator(x[key], value),
+            lambda x: operator(x[key], value),
             residue_counter=None, fields=None, **kwargs)

@@ -5,11 +5,9 @@
 #
 
 import functools
-import json
 import traceback
 
 from chorus import rdkit
-from chorus.model.graphmol import Compound
 
 from flashflood import static
 from flashflood.core.concurrent import ConcurrentFilter
@@ -24,17 +22,17 @@ from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import ContainerWriter
 
 
-def rdmorgan_filter(qmol, params, row):
-    mol = row["__molobj"]
+def rdmorgan_calc(qmol, radius, row):
     try:
-        score = rdkit.morgan_sim(mol, qmol, radius=2)  # ECFP4 equivalent
+        row["morgan_sim"] = rdkit.morgan_sim(row["__molobj"], qmol, radius)
     except:
         print(traceback.format_exc())
         return
-    thld = float(params["threshold"])
-    if score >= thld:
-        row["morgan_sim"] = score
-        return row
+    return row
+
+
+def thld_filter(thld, row):
+    return row["morgan_sim"] >= thld
 
 
 class RDKitMorgan(Workflow):
@@ -45,16 +43,18 @@ class RDKitMorgan(Workflow):
         self.done_count = Counter()
         self.input_size = Counter()
         self.data_type = "nodes"
-        qmol = sqlite.query_mol(query["queryMol"])
-        func = functools.partial(rdmorgan_filter, qmol, query["params"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
+        # radius=2 is ECFP4 equivalent
+        qmol = sqlite.query_mol(query["queryMol"])
         self.append(ConcurrentFilter(
-            func=func, residue_counter=self.done_count,
+            functools.partial(thld_filter, float(query["threshold"])),
+            func=functools.partial(rdmorgan_calc, qmol, 2),
+            residue_counter=self.done_count,
             fields=[
                 {"key": "morgan_sim", "name": "Fingerprint similarity",
                  "d3_format": ".2f"}
