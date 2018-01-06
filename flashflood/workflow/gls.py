@@ -56,6 +56,7 @@ def gls_calc(qarr, rcd):
     res = mcsdr.local_sim(qarr, rcd["array"])
     rcd["local_sim"] = res["local_sim"]
     rcd["mcsdr"] = res["mcsdr_edges"]
+    del rcd["array"]
     return rcd
 
 

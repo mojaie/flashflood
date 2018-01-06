@@ -58,7 +58,7 @@ class Connection(object):
     def find_all(self, table, key, value, op="=", arraysize=1000):
         """find records and return result generator"""
         return self.fetch_iter(
-            "SELECT * FROM {} WHERE {}{}?".format(table, key, op),
+            "SELECT * FROM {} WHERE {} {} ?".format(table, key, op),
             values=(value,), arraysize=arraysize)
 
     def find_first(self, table, key, value):
@@ -69,7 +69,7 @@ class Connection(object):
             None: if nothing is found
         """
         return self.fetch_one(
-            "SELECT * FROM {} WHERE {}=?".format(table, key), values=(value,))
+            "SELECT * FROM {} WHERE {} = ?".format(table, key), values=(value,))
 
 
 def find_resource(resource_id):

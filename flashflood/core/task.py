@@ -52,8 +52,9 @@ class Task(object):
         self.creation_time = time.time()
         self.start_time = None
         self.finish_time = None
-        # TODO: verbose output
         self.verbose = verbose
+        if self.verbose:
+            self.specs.verbose = True
 
     @gen.coroutine
     def run(self):

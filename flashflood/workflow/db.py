@@ -16,7 +16,7 @@ from flashflood.node.writer.container import ContainerWriter
 
 
 op_conv = {"eq": "=", "gt": ">", "lt": "<", "ge": ">=", "le": "<=",
-           "lk": "LIKE", "in": "IN"}
+           "lk": "LIKE"}
 
 
 class DBFilter(Workflow):

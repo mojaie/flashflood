@@ -180,10 +180,10 @@ class WorkflowProgress(web.RequestHandler):
         else:
             if query["command"] == "abort":
                 self.jobqueue.abort(query["id"])
-            while 1:
-                if task.status in ("done", "aborted"):
-                    break
-                yield gen.sleep(0.5)
+                while 1:
+                    if task.status in ("done", "aborted"):
+                        break
+                    yield gen.sleep(0.5)
             self.write(task.response())
 
 
