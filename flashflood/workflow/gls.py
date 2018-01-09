@@ -17,7 +17,6 @@ from flashflood.core.workflow import Workflow
 from flashflood.interface import sqlite
 from flashflood.node.chem.descriptor import AsyncMolDescriptor
 from flashflood.node.chem.molecule import AsyncMoleculeToJSON, UnpickleMolecule
-from flashflood.node.control.filter import Filter
 from flashflood.node.field.number import AsyncNumber
 from flashflood.node.monitor.count import AsyncCountRows
 from flashflood.node.reader.sqlite import SQLiteReader
@@ -25,10 +24,13 @@ from flashflood.node.writer.container import ContainerWriter
 
 
 def molsize_prefilter(cutoff, rcd):
-    return len(rcd["__molobj"]) <= cutoff
+    if len(rcd["__molobj"]) <= cutoff:
+        return rcd
 
 
 def gls_array(ignoreHs, diam, tree, rcd):
+    if rcd is None:
+        return
     if ignoreHs:
         mol = molutil.make_Hs_implicit(rcd["__molobj"])
     else:
@@ -36,23 +38,28 @@ def gls_array(ignoreHs, diam, tree, rcd):
     try:
         arr = mcsdr.comparison_array(mol, diam, tree)
     except ValueError:
-        pass
+        return
     else:
         rcd["array"] = arr
     return rcd
 
 
 def gls_prefilter(thld, measure, qarr, rcd):
-    if "array" not in rcd:
-        return False
+    if rcd is None:
+        return
     sm, bg = sorted((qarr[1], rcd["array"][1]))
     if measure == "sim":
-        return sm >= bg * thld
+        if sm < bg * thld:
+            return
     elif measure == "edge":
-        return sm >= thld
+        if sm < thld:
+            return
+    return rcd
 
 
 def gls_calc(qarr, rcd):
+    if rcd is None:
+        return
     res = mcsdr.local_sim(qarr, rcd["array"])
     rcd["local_sim"] = res["local_sim"]
     rcd["mcsdr"] = res["mcsdr_edges"]
@@ -61,6 +68,8 @@ def gls_calc(qarr, rcd):
 
 
 def thld_filter(thld, measure, rcd):
+    if rcd is None:
+        return False
     type_ = {"sim": "local_sim", "edge": "mcsdr"}
     return rcd[type_[measure]] >= thld
 
@@ -87,10 +96,10 @@ class GLS(Workflow):
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
-        self.append(Filter(functools.partial(molsize_prefilter, cutoff)))
+        self.append(FuncNode(functools.partial(molsize_prefilter, cutoff)))
         self.append(FuncNode(
             functools.partial(gls_array, ignoreHs, diam, tree)))
-        self.append(Filter(
+        self.append(FuncNode(
             functools.partial(gls_prefilter, thld, measure, qarr)))
         self.append(ConcurrentFilter(
             functools.partial(thld_filter, thld, measure),

@@ -43,6 +43,7 @@ class RDKitMorgan(Workflow):
         self.done_count = Counter()
         self.input_size = Counter()
         self.data_type = "nodes"
+        thld = float(query["params"]["threshold"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
@@ -52,7 +53,7 @@ class RDKitMorgan(Workflow):
         # radius=2 is ECFP4 equivalent
         qmol = sqlite.query_mol(query["queryMol"])
         self.append(ConcurrentFilter(
-            functools.partial(thld_filter, float(query["threshold"])),
+            functools.partial(thld_filter, thld),
             func=functools.partial(rdmorgan_calc, qmol, 2),
             residue_counter=self.done_count,
             fields=[

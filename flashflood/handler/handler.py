@@ -19,8 +19,9 @@ from flashflood import static
 from flashflood.handler import auth
 from flashflood.interface import sqlite
 from flashflood.interface import xlsx
-from flashflood.workflow import chemprop
-from flashflood.workflow import db
+from flashflood.lod import ListOfDict
+from flashflood.workflow import chemdbfilter
+from flashflood.workflow import chemdbsearch
 from flashflood.workflow import gls
 from flashflood.workflow import profile
 from flashflood.workflow import similaritynetwork
@@ -46,14 +47,9 @@ class WorkflowHandler(web.RequestHandler):
         self.write(task.response())
 
 
-class ChemSearch(WorkflowHandler):
+class ChemDBSearch(WorkflowHandler):
     def initialize(self):
-        super().initialize(db.ChemDBSearch)
-
-
-class ChemFilter(WorkflowHandler):
-    def initialize(self):
-        super().initialize(db.ChemDBFilter)
+        super().initialize(chemdbsearch.ChemDBSearch)
 
 
 class Profile(WorkflowHandler):
@@ -82,6 +78,11 @@ class AsyncWorkflowHandler(web.RequestHandler):
         self.write(task.response())
 
 
+class ChemDBFilter(AsyncWorkflowHandler):
+    def initialize(self, **kwargs):
+        super().initialize(chemdbfilter.ChemDBFilter, **kwargs)
+
+
 class Substruct(AsyncWorkflowHandler):
     def initialize(self, **kwargs):
         super().initialize(substructure.Substruct, **kwargs)
@@ -90,11 +91,6 @@ class Substruct(AsyncWorkflowHandler):
 class Superstruct(AsyncWorkflowHandler):
     def initialize(self, **kwargs):
         super().initialize(substructure.Superstruct, **kwargs)
-
-
-class ChemProp(AsyncWorkflowHandler):
-    def initialize(self, **kwargs):
-        super().initialize(chemprop.ChemProp, **kwargs)
 
 
 class GLS(AsyncWorkflowHandler):
@@ -245,6 +241,13 @@ class Schema(web.RequestHandler):
             rsrc.pop("resourceType", None)
             rsrc.pop("resourceURL", None)
             rsrc.pop("table", None)
+            fields = ListOfDict()
+            for f in rsrc["fields"]:
+                if not f["key"].startswith("__"):
+                    fields.add(f)
+            if rsrc["domain"] == "chemical":
+                fields.merge(static.MOL_DESC_FIELDS)
+            rsrc["fields"] = list(fields)
             resources.append(rsrc)
         self.write({
             "resources": resources,

@@ -38,6 +38,8 @@ class SQLiteReaderSearch(SQLiteReader):
         for v in self.values:
             for file_, table in self.tables:
                 conn = sqlite.Connection(file_)
+                if self.key not in conn.columns(table):
+                    continue
                 found = conn.find_first(table, self.key, v)
                 if found:
                     rcds.append(found)
@@ -61,6 +63,8 @@ class SQLiteReaderFilter(SQLiteReader):
         rcds = []
         for file_, table in self.tables:
             conn = sqlite.Connection(file_)
+            if self.key not in conn.columns(table):
+                continue
             found = conn.find_all(table, self.key, self.value, self.operator)
             if self.counter is not None:
                 found = list(found)

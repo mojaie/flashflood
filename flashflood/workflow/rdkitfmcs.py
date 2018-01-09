@@ -34,6 +34,8 @@ def rdfmcs_calc(qmol, timeout, row):
 
 
 def thld_filter(thld, measure, row):
+    if row is None:
+        return
     type_ = {"sim": "fmcs_sim", "edge": "fmcs_edges"}
     return row[type_[measure]] >= thld
 
@@ -46,10 +48,9 @@ class RDKitFMCS(Workflow):
         self.done_count = Counter()
         self.input_size = Counter()
         self.data_type = "nodes"
-        self.fields.extend([
-            {"key": "fmcs_sim", "name": "MCS similarity", "d3_format": ".2f"},
-            {"key": "fmcs_edges", "name": "MCS size", "d3_format": "d"}
-        ])
+        measure = query["params"]["measure"]
+        thld = float(query["params"]["threshold"])
+        timeout = int(query["params"]["timeout"])
         self.append(SQLiteReader(
             [sqlite.find_resource(t) for t in query["targets"]],
             fields=sqlite.merged_fields(query["targets"]),
@@ -58,10 +59,15 @@ class RDKitFMCS(Workflow):
         self.append(UnpickleMolecule())
         qmol = sqlite.query_mol(query["queryMol"])
         self.append(ConcurrentFilter(
-            functools.partial(
-                thld_filter, float(query["threshold"]), query["measure"]),
-            func=functools.partial(rdfmcs_calc, qmol, float(query["timeout"])),
-            residue_counter=self.done_count))
+            functools.partial(thld_filter, thld, measure),
+            func=functools.partial(rdfmcs_calc, qmol, timeout),
+            residue_counter=self.done_count,
+            fields=[
+                {"key": "fmcs_sim", "name": "MCS similarity",
+                 "d3_format": ".2f"},
+                {"key": "fmcs_edges", "name": "MCS size", "d3_format": "d"}
+            ]
+        ))
         self.append(AsyncMolDescriptor(static.MOL_DESC_KEYS))
         self.append(AsyncMoleculeToJSON())
         self.append(AsyncNumber("index", fields=[static.INDEX_FIELD]))

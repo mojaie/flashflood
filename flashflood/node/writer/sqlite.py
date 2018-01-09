@@ -169,13 +169,7 @@ class SQLiteWriter(Node):
                 for result in self._results:
                     rsrc = result["params"]["sqlite_schema"]
                     rsrc["resourceType"] = "sqlite"
-                    fields = ListOfDict()
-                    for f in result["fields"]:
-                        if not f["key"].startswith("__"):
-                            fields.add(f)
-                    if rsrc["domain"] == "chemical":
-                        fields.merge(static.MOL_DESC_FIELDS)
-                    rsrc["fields"] = list(fields)
+                    rsrc["fields"] = list(result["fields"])
                     schema.append(rsrc)
                 with open(dest, "w") as f:
                     yaml.dump(schema, f)

@@ -141,13 +141,15 @@ class RDKitMorganNetwork(Workflow):
         self.input_size = Counter()
         self.data_type = "edges"
         self.reference = {"nodes": contents["id"]}
+        ignoreHs = params["ignoreHs"]
+        thld = float(params["threshold"])
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FuncNode(functools.partial(rdkit_mol, params["ignoreHs"])))
+        self.append(FuncNode(functools.partial(rdkit_mol, ignoreHs)))
         self.append(Combination(counter=self.input_size))
         # radius=2 is ECFP4 equivalent
         self.append(ConcurrentFilter(
-            functools.partial(thld_filter, float(params["threshold"])),
+            functools.partial(thld_filter, thld),
             func=functools.partial(morgan_calc, 2),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
@@ -164,13 +166,16 @@ class RDKitFMCSNetwork(Workflow):
         self.input_size = Counter()
         self.data_type = "edges"
         self.reference = {"nodes": contents["id"]}
+        ignoreHs = params["ignoreHs"]
+        thld = float(params["threshold"])
+        timeout = int(params["timeout"])
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(FuncNode(functools.partial(rdkit_mol, params["ignoreHs"])))
+        self.append(FuncNode(functools.partial(rdkit_mol, ignoreHs)))
         self.append(Combination(counter=self.input_size))
         self.append(ConcurrentFilter(
-            functools.partial(thld_filter, float(params["threshold"])),
-            func=functools.partial(fmcs_calc, float(params["timeout"])),
+            functools.partial(thld_filter, thld),
+            func=functools.partial(fmcs_calc, timeout),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))

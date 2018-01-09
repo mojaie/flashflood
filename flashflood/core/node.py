@@ -101,7 +101,8 @@ class IterNode(Node):
     downstream if incoming FuncEdge has unapplied func and args.
 
     IterNode itself does not change contents of data records. IterNode should
-    be inherited when you want to add some functionalities. Overriding IterNode.processor method may be a good practice to implement your own
+    be inherited when you want to add some functionalities. Overriding
+    IterNode.processor method may be a good practice to implement your own
     input generator.
 
     Args:
@@ -208,7 +209,8 @@ class AsyncNode(Node):
     (IterEdge and FuncEdge).
 
     AsyncNode itself does not change contents of data records. AsyncNode should
-    be inherited when you want to add some functionalities. Overriding AsyncNode.process_record method may be a good practice to implement your
+    be inherited when you want to add some functionalities. Overriding
+    AsyncNode.process_record method may be a good practice to implement your
     own asynchronous worker nodes.
 
     Args:

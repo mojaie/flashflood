@@ -22,6 +22,14 @@ class Connection(object):
         con.row_factory = sqlite3.Row
         self._cursor = con.cursor()
 
+    def columns(self, table):
+        """Returns list of columns"""
+        return [
+            row["name"] for row in self._cursor.execute(
+                "pragma table_info('{}')".format(table)
+            )
+        ]
+
     def fetch_iter(self, query, values=(), arraysize=1000):
         """Execute custom fetch query"""
         self._cursor.execute(query, values)
@@ -48,18 +56,21 @@ class Connection(object):
         else:
             orderby = ""
         return self.fetch_iter(
-            "SELECT * FROM {}{}".format(table, orderby), arraysize=arraysize)
+            "SELECT * FROM {}{}".format(table, orderby), arraysize=arraysize
+        )
 
     def rows_count(self, table):
         """Returns number of records of tables"""
         return self.fetch_one(
-            "SELECT count(*) FROM {}".format(table))["count(*)"]
+            "SELECT count(*) FROM {}".format(table)
+        )["count(*)"]
 
     def find_all(self, table, key, value, op="=", arraysize=1000):
         """find records and return result generator"""
         return self.fetch_iter(
             "SELECT * FROM {} WHERE {} {} ?".format(table, key, op),
-            values=(value,), arraysize=arraysize)
+            values=(value,), arraysize=arraysize
+        )
 
     def find_first(self, table, key, value):
         """find records and return first one
@@ -69,7 +80,8 @@ class Connection(object):
             None: if nothing is found
         """
         return self.fetch_one(
-            "SELECT * FROM {} WHERE {} = ?".format(table, key), values=(value,))
+            "SELECT * FROM {} WHERE {} = ?".format(table, key), values=(value,)
+        )
 
 
 def find_resource(resource_id):

@@ -13,7 +13,7 @@ from flashflood.core.node import IterNode, FuncNode, AsyncNode
 from flashflood.core.task import Task
 from flashflood.core.workflow import Workflow
 from flashflood.node.reader.iterinput import IterInput
-from flashflood.node.record.merge import MergeRecords
+from flashflood.node.record.merge import MergeRecords, AsyncMergeRecords
 from flashflood.node.writer.container import ContainerWriter
 
 
@@ -53,6 +53,25 @@ class TestMerge(AsyncTestCase):
         yield task.execute()
         self.assertEqual(len(list(result.records)), 6)
 
+    @gen_test
+    def test_asyncmerge(self):
+        wf = Workflow()
+        wf.interval = 0.01
+        result = Container()
+        in1 = AsyncNode()
+        wf.connect(IterInput(RECORDS1), in1)
+        in2 = FuncNode()
+        wf.connect(IterInput(RECORDS2), in2)
+        in3 = IterNode()
+        wf.connect(IterInput(RECORDS3), in3)
+        merge = AsyncMergeRecords()
+        wf.connect(in1, merge)
+        wf.connect(in2, merge)
+        wf.connect(in3, merge)
+        wf.connect(merge, ContainerWriter(result))
+        task = Task(wf)
+        yield task.execute()
+        self.assertEqual(len(list(result.records)), 6)
 
 if __name__ == '__main__':
     unittest.main()
