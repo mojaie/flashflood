@@ -7,7 +7,7 @@ from chorus.draw.svg import mol_to_svg
 
 from flashflood.lod import ListOfDict
 
-SCHEMA_VERSION = 0.10
+SCHEMA_VERSION = "0.10"
 
 """ Option module availability """
 
