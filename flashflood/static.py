@@ -55,7 +55,7 @@ MOL_DESCS = collections.OrderedDict([
     ("_mw", Descriptor(molutil.mw, "MW", "d3_format", ".2f")),
     ("_mw_wo_sw", Descriptor(molutil.mw_wo_sw, "MW w/o salt and water",
                              "d3_format", ".2f")),
-    ("_formula", Descriptor(molutil.mw_wo_sw, "Formula", "format", "text")),
+    ("_formula", Descriptor(molutil.formula, "Formula", "format", "text")),
     ("_logp", Descriptor(wclogp.wclogp, "WCLogP", "d3_format", ".1f")),
     ("_nonH", Descriptor(molutil.non_hydrogen_count, "Non-H atom count",
                          "d3_format", "d"))
