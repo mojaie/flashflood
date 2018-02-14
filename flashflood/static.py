@@ -7,7 +7,7 @@ from chorus.draw.svg import mol_to_svg
 
 from flashflood.lod import ListOfDict
 
-SCHEMA_VERSION = "0.10"
+JOB_RESULT_SCHEMA = "https://mojaie.github.io/flashflood/_static/specs/job_result_v1.0.json"
 
 """ Option module availability """
 

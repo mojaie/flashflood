@@ -13,9 +13,10 @@ API references
    core.node
    core.task
    core.workflow
-   excelexporter
+   interface.sqlite
+   interface.xlsx
    functional
-   handler
+   handler.handler
    lod
    node.aggregate.first
    node.chem.descriptor
@@ -30,4 +31,3 @@ API references
    node.reader.sqlite
    node.writer.container
    node.writer.sqlite
-   sqliteconnection

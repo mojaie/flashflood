@@ -15,19 +15,18 @@ class ResponseTask(Task):
     def response(self):
         ref = self.specs.reference if hasattr(self.specs, "reference") else {}
         return {
+            "$schema": static.JOB_RESULT_SCHEMA,
             "id": self.id,
             "name": self.id[:8],
             "dataType": self.specs.data_type,
-            "schemaVersion": static.SCHEMA_VERSION,
-            "revision": 0,
+            "query": self.specs.query,
             "created": time.strftime("%X %x %Z",
                                      time.localtime(self.creation_time)),
             "status": self.status,
+            "progress": self.progress(),
             "execTime": self.execution_time(),
-            "query": self.specs.query,
             "fields": self.set_fields(),
             "records": self.specs.results.records,
-            "progress": self.progress(),
             "reference": ref
         }
 
