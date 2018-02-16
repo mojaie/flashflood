@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Server resource",
+  "type": "object",
+  "required": [
+    "resources", "templates", "compoundIDPlaceholder"
+  ],
+  "properties": {
+    "resources": {
+      "type": "array",
+      "description": "Database resources"
+    },
+    "templates": {
+      "type": "array",
+      "description": "Template resources"
+    },
+    "compoundIDPlaceholder": {
+      "type": "string",
+      "description": "A placeholder for Compound ID search dialog"
+    }
+  }
+}

@@ -109,7 +109,6 @@ class GLSNetwork(Workflow):
         self.done_count = Counter()
         self.input_size = Counter()
         self.data_type = "edges"
-        self.reference = {"nodes": contents["id"]}
         ignoreHs = params["ignoreHs"]
         thld = float(params["threshold"])
         diam = int(params["diameter"])

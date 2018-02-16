@@ -9,7 +9,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Task ID"
+      "description": "result ID"
     },
     "name": {
       "type": "string",

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "title": "Job failure",
+  "type": "object",
+  "required": [
+    "id", "status", "message"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "result ID"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["failure"],
+      "description": "Task status"
+    },
+    "reason": {
+      "type": "text",
+      "description": "Reason why the task was failed"
+    }
+  }
+}

@@ -5,6 +5,7 @@
 #
 
 import time
+import uuid
 
 from flashflood import static
 from flashflood.core.task import Task
@@ -13,10 +14,9 @@ from flashflood.lod import ListOfDict
 
 class ResponseTask(Task):
     def response(self):
-        ref = self.specs.reference if hasattr(self.specs, "reference") else {}
         return {
             "$schema": static.JOB_RESULT_SCHEMA,
-            "id": self.id,
+            "id": str(uuid.uuid4()),
             "name": self.id[:8],
             "dataType": self.specs.data_type,
             "query": self.specs.query,
@@ -27,7 +27,9 @@ class ResponseTask(Task):
             "execTime": self.execution_time(),
             "fields": self.set_fields(),
             "records": self.specs.results.records,
-            "reference": ref
+            "reference": {
+                "workflow": self.id
+            }
         }
 
     def set_fields(self):

@@ -171,7 +171,7 @@ class WorkflowProgress(web.RequestHandler):
             self.write({
                 "id": query["id"],
                 "status": "failure",
-                "message": "job not found"
+                "reason": "job not found"
             })
         else:
             if query["command"] == "abort":
