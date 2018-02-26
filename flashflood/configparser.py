@@ -14,6 +14,7 @@ except FileNotFoundError:
     config = {}
 
 
+URL_PREFIX = config.get("url_prefix")
 BASIC_AUTH_REALM = config.get("basic_auth_realm")
 INSTANCE_PREFIX = config.get("server_instance_prefix")
 
