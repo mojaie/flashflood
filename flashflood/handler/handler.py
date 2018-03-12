@@ -20,6 +20,7 @@ from flashflood.handler import auth
 from flashflood.interface import sqlite
 from flashflood.interface import xlsx
 from flashflood.lod import ListOfDict
+from flashflood.workflow import activity
 from flashflood.workflow import chemdbfilter
 from flashflood.workflow import chemdbsearch
 from flashflood.workflow import gls
@@ -55,6 +56,11 @@ class ChemDBSearch(WorkflowHandler):
 class Profile(WorkflowHandler):
     def initialize(self):
         super().initialize(profile.Profile)
+
+
+class Activity(WorkflowHandler):
+    def initialize(self):
+        super().initialize(activity.Activity)
 
 
 class ExactStruct(WorkflowHandler):
