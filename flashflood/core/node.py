@@ -125,13 +125,18 @@ class IterNode(Node):
                 break
             if self._in_edge.status == "done":
                 if self.edge_type(self._in_edge) == "IterEdge":
-                    self._out_edge.send(self.processor(self._in_edge.records))
+                    self._out_edge.send(
+                        self._proc_wrapper(self._in_edge.records, on_finish))
                 elif self.edge_type(self._in_edge) == "FuncEdge":
-                    self._out_edge.send(self.processor(
-                        map(self._in_edge.func, self._in_edge.records)))
+                    self._out_edge.send(
+                        self._proc_wrapper(
+                            map(self._in_edge.func, self._in_edge.records),
+                            on_finish
+                        )
+                    )
                 else:
-                    self._out_edge.send(self.processor(self._rcds_tmp))
-                on_finish()
+                    self._out_edge.send(
+                        self._proc_wrapper(self._rcds_tmp, on_finish))
                 break
             yield gen.sleep(self.interval)
 
@@ -141,6 +146,11 @@ class IterNode(Node):
         while 1:
             in_ = yield self._in_edge.get()
             self._rcds_tmp.append(in_)
+
+    def _proc_wrapper(self, rcds, on_finish):
+        for r in self.processor(rcds):
+            yield r
+        on_finish()
 
     def processor(self, rcds):
         for r in rcds:
