@@ -13,6 +13,7 @@ from flashflood.core.container import Container
 from flashflood.interface import sqlite
 from flashflood.node.control.filter import Filter
 from flashflood.node.field.number import Number
+from flashflood.node.transform.unstack import Unstack
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.node.reader.sqlite import SQLiteReaderFilter
 from flashflood.node.record.merge import MergeRecords
@@ -49,5 +50,10 @@ class Activity(Workflow):
         vts = query.get("condition", {}).get("value_types", [])
         if vts:
             self.append(Filter(lambda x: x["value_type"] in vts))
+        else:
+            vts = ["IC50"]  # TODO
+        self.append(
+            Unstack(["compound_id", "assay_id"], "value_type", "value", vts)
+        )
         self.append(Number("index", fields=[static.INDEX_FIELD]))
         self.append(ContainerWriter(self.results))
