@@ -58,13 +58,14 @@ def gls_prefilter(thld, pair):
     return sm >= bg * thld
 
 
-def gls_calc(pair):
+def gls_calc(timeout, pair):
     row1, row2 = pair
-    res = mcsdr.local_sim(row1["array"], row2["array"])
+    res = mcsdr.from_array(row1["array"], row2["array"], timeout)
     return {
         "source": row1["index"],
         "target": row2["index"],
-        "weight": res["local_sim"]
+        "weight": res.local_sim(),
+        "timeout": res.exec_time()["total"] >= timeout
     }
 
 
@@ -93,7 +94,7 @@ def fmcs_calc(timeout, pair):
         "source": row1["index"],
         "target": row2["index"],
         "weight": res["similarity"],
-        "canceled": res["canceled"]
+        "timeout": res["timeout"]
     }
 
 
@@ -113,10 +114,9 @@ class GLSNetwork(Workflow):
         thld = float(params["threshold"])
         diam = int(params["diameter"])
         tree = int(params["maxTreeSize"])
-        cutoff = int(params["molSizeCutoff"])
+        timeout = float(params["timeout"])
         self.append(IterInput(contents["records"]))
         self.append(MoleculeFromJSON())
-        self.append(Filter(functools.partial(molsize_prefilter, cutoff)))
         self.append(FuncNode(
             functools.partial(gls_array, ignoreHs, diam, tree)
         ))
@@ -124,7 +124,7 @@ class GLSNetwork(Workflow):
         self.append(Filter(functools.partial(gls_prefilter, thld)))
         self.append(ConcurrentFilter(
             functools.partial(thld_filter, thld),
-            func=functools.partial(gls_calc),
+            func=functools.partial(gls_calc, timeout),
             residue_counter=self.done_count, fields=GRAPH_FIELDS
         ))
         self.append(AsyncCountRows(self.done_count))

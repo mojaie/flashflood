@@ -23,11 +23,6 @@ from flashflood.node.reader.sqlite import SQLiteReader
 from flashflood.node.writer.container import ContainerWriter
 
 
-def molsize_prefilter(cutoff, rcd):
-    if len(rcd["__molobj"]) <= cutoff:
-        return rcd
-
-
 def gls_array(ignoreHs, diam, tree, rcd):
     if rcd is None:
         return
@@ -57,12 +52,12 @@ def gls_prefilter(thld, measure, qarr, rcd):
     return rcd
 
 
-def gls_calc(qarr, rcd):
+def gls_calc(qarr, timeout, rcd):
     if rcd is None:
         return
-    res = mcsdr.local_sim(qarr, rcd["array"])
-    rcd["local_sim"] = res["local_sim"]
-    rcd["mcsdr"] = res["mcsdr_edges"]
+    res = mcsdr.from_array(qarr, rcd["array"], timeout)
+    rcd["local_sim"] = res.local_sim()
+    rcd["mcsdr"] = res.edge_count()
     del rcd["array"]
     return rcd
 
@@ -87,7 +82,7 @@ class GLS(Workflow):
         thld = float(query["params"]["threshold"])
         diam = int(query["params"]["diameter"])
         tree = int(query["params"]["maxTreeSize"])
-        cutoff = int(query["params"]["molSizeCutoff"])
+        timeout = float(query["params"]["timeout"])
         qmol = sqlite.query_mol(query["queryMol"])
         qarr = mcsdr.comparison_array(qmol, diam, tree)
         self.append(SQLiteReader(
@@ -96,14 +91,13 @@ class GLS(Workflow):
             counter=self.input_size
         ))
         self.append(UnpickleMolecule())
-        self.append(FuncNode(functools.partial(molsize_prefilter, cutoff)))
         self.append(FuncNode(
             functools.partial(gls_array, ignoreHs, diam, tree)))
         self.append(FuncNode(
             functools.partial(gls_prefilter, thld, measure, qarr)))
         self.append(ConcurrentFilter(
             functools.partial(thld_filter, thld, measure),
-            func=functools.partial(gls_calc, qarr),
+            func=functools.partial(gls_calc, qarr, timeout),
             residue_counter=self.done_count,
             fields=[
                 {"key": "mcsdr", "name": "MCS-DR size", "d3_format": "d"},
