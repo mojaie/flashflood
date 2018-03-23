@@ -41,7 +41,7 @@ def gls_array(ignoreHs, diam, tree, rcd):
         mol = rcd["__molobj"]
     try:
         arr = mcsdr.comparison_array(mol, diam, tree)
-    except ValueError:
+    except (ValueError, RuntimeError):
         pass
     else:
         arr_rcd["array"] = arr
