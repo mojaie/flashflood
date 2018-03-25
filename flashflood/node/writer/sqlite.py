@@ -17,7 +17,7 @@ from flashflood.core.node import Node
 from flashflood.core.task import (
     InvalidOperationError, UnexpectedOperationWarning)
 from flashflood.lod import ListOfDict
-from flashflood.util import debug
+from flashflood import debug
 
 
 class SQLiteWriter(Node):

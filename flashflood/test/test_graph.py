@@ -6,7 +6,7 @@
 
 import unittest
 
-from flashflood.util import graph
+from flashflood import graph
 
 
 def succs_to_preds(succs):

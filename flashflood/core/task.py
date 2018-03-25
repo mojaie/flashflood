@@ -10,7 +10,7 @@ import warnings
 
 from tornado import gen
 
-from flashflood.util import debug
+from flashflood import debug
 
 
 class InvalidOperationError(Exception):

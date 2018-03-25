@@ -6,7 +6,7 @@
 
 from tornado import gen
 
-from flashflood.util import graph
+from flashflood import graph
 from flashflood.core.task import Task, TaskSpecs, InvalidOperationError
 
 
