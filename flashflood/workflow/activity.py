@@ -47,13 +47,17 @@ class Activity(Workflow):
         cps = query.get("condition", {}).get("compounds", [])
         if cps:
             self.append(Filter(lambda x: x["compound_id"] in cps))
-        vts = query.get("condition", {}).get("value_types", [])
-        if vts:
-            self.append(Filter(lambda x: x["value_type"] in vts))
-        else:
-            vts = ["IC50"]  # TODO
-        self.append(
-            Unstack(["compound_id", "assay_id"], "value_type", "value", vts)
-        )
+        vtypes = query.get("condition", {}).get("value_types", ["IC50"])
+        self.append(Filter(lambda x: x["value_type"] in vtypes))
+        fields = [{
+            "key": "{}_{}".format(query["assay_id"], vt),
+            "name": "{}:{}".format(query["assay_id"], vt),
+            "format": "numeric"
+        } for vt in vtypes]
+        self.append(Unstack(
+            ["compound_id", "assay_id"], "value_type", "value",
+            label_prefix="{}_".format(query["assay_id"]),
+            fields=fields
+        ))
         self.append(Number("index", fields=[static.INDEX_FIELD]))
         self.append(ContainerWriter(self.results))
