@@ -7,7 +7,7 @@
 import base64
 import functools
 
-from flashflood import configparser as conf
+from tornado import web
 
 
 def basic_auth(method):
@@ -16,7 +16,7 @@ def basic_auth(method):
         def reject(hdl):
             hdl.set_header(
                 'WWW-Authenticate',
-                'Basic realm={}'.format(conf.BASIC_AUTH_REALM)
+                'Basic realm={}'.format(hdl.auth_realm)
             )
             hdl.set_status(401)
 
@@ -28,7 +28,16 @@ def basic_auth(method):
         auth_decoded = base64.b64decode(auth[6:]).decode('utf-8')
         user, passwd = auth_decoded.split(':')
 
-        if conf.user_passwd_matched(user, passwd):
+        if handler.user_passwd_matched(user, passwd):
             return method(handler, *args, **kwargs)
         return reject(handler)
     return wrapper
+
+
+class BasicAuthHandler(web.RequestHandler):
+    def initialize(self, *args, **kwargs):
+        super().initialize(*args, **kwargs)
+        self.auth_realm = "flashflood"
+
+    def user_passwod_matched(self):
+        raise NotImplementedError()

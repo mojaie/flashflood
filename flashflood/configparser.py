@@ -15,7 +15,6 @@ except FileNotFoundError:
 
 
 URL_PREFIX = config.get("url_prefix")
-BASIC_AUTH_REALM = config.get("basic_auth_realm")
 INSTANCE_PREFIX = config.get("server_instance_prefix")
 
 SQLITE_BASE_DIR = config.get("sqlite_base_dir")
@@ -28,10 +27,6 @@ EXTERNALS = config.get("externals", [])
 
 COMPID_PLACEHOLDER = config.get("compound_id_placeholder", "")
 USERS = config.get("user")
-
-
-def user_passwd_matched(user, passwd):
-    return user in USERS and passwd == USERS[user]["password"]
 
 
 RESOURCES = ListOfDict()
