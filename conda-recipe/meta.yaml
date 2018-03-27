@@ -1,9 +1,9 @@
 package:
   name: flashflood
-  version: 0.10.0
+  version: 0.11.0
 
 source:
-  git_rev: v0.10.0
+  git_rev: v0.11.0
   git_url: ../
 
 requirements:
@@ -16,14 +16,12 @@ requirements:
     - chorus
     - tornado
     - xlsxwriter
-    - pandas
-    - python-louvain
 
 test:
   imports:
     - flashflood
 
 about:
-  home: https://github.com/mojaie/chorus
+  home: https://github.com/mojaie/flashflood
   license: MIT
   license_file: LICENSE
