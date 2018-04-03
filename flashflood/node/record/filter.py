@@ -4,20 +4,19 @@
 # http://opensource.org/licenses/MIT
 #
 
-import operator
-
+from flashflood import sort
 from flashflood.node.control.filter import Filter, AsyncFilter
 
 
 class FilterRecords(Filter):
-    def __init__(self, key, value, operator=operator.eq, **kwargs):
+    def __init__(self, key, value, op="=", **kwargs):
         super().__init__(
-            lambda x: operator(x[key], value),
+            lambda x: sort.op_to_func[op](x[key], value),
             residue_counter=None, fields=None, **kwargs)
 
 
 class AsyncFilterRecords(AsyncFilter):
-    def __init__(self, key, value, operator=operator.eq, **kwargs):
+    def __init__(self, key, value, op="=", **kwargs):
         super().__init__(
-            lambda x: operator(x[key], value),
+            lambda x: sort.op_to_func[op](x[key], value),
             residue_counter=None, fields=None, **kwargs)
