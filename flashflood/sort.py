@@ -40,8 +40,7 @@ def sort_cmp(a, b):
             return 0
 
 
-def sort_key():
-    return functools.cmp_to_key(sort_cmp)
+sort_key = functools.cmp_to_key(sort_cmp)
 
 
 def eq(a, b):

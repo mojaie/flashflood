@@ -20,8 +20,8 @@ class TestSort(unittest.TestCase):
         self.assertLess(sort_cmp('fuga', None), 0)
         self.assertLess(sort_cmp(int, str), 0)
         self.assertLess(sort_cmp([1, 2, 3], {1, 2, 3}), 0)
-        self.assertTrue(sort_key()(1) < sort_key()(2))
-        self.assertTrue(sort_key()('fuga') < sort_key()('hoge'))
+        self.assertTrue(sort_key(1) < sort_key(2))
+        self.assertTrue(sort_key('fuga') < sort_key('hoge'))
 
 
 if __name__ == '__main__':
