@@ -42,7 +42,7 @@ class TestUnstack(AsyncTestCase):
         rcds = ListOfDict(result.records)
         self.assertEqual(len(rcds), 5)
         self.assertEqual(rcds.find("id", 3)["a"], 2345)
-        self.assertEqual(len(rcds.find("id", 5)), 2)
+        self.assertEqual(len(rcds.find("id", 5)), 3)
 
 
 if __name__ == '__main__':

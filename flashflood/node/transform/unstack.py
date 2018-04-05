@@ -32,8 +32,10 @@ class Unstack(IterNode):
             if ks in self._mapping:
                 self._mapping[ks].update(kv)
                 continue
-            self._mapping[ks] = {k: r[k] for k in self.keys}
-            self._mapping[ks].update(kv)
+            new_r = r.copy()
+            new_r.update(kv)
+            del new_r[self.value]
+            self._mapping[ks] = new_r
             kss.append(ks)
         for ks in kss:
             yield self._mapping[ks]
