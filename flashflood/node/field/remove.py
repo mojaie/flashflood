@@ -23,3 +23,21 @@ class RemoveField(FuncNode):
     def merge_fields(self):
         super().merge_fields()
         self._out_edge.fields.delete("key", self.key)
+
+
+def remove_many(keys, row):
+    new_row = row.copy()
+    for k in keys:
+        del new_row[k]
+    return new_row
+
+
+class RemoveFields(FuncNode):
+    def __init__(self, keys, **kwargs):
+        super().__init__(functools.partial(remove_many, keys), **kwargs)
+        self.keys = keys
+
+    def merge_fields(self):
+        super().merge_fields()
+        for k in self.keys:
+            self._out_edge.fields.delete("key", k)
