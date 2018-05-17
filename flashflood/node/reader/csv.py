@@ -9,7 +9,7 @@ import csv
 from flashflood.node.reader.readerbase import ReaderBase
 
 
-class CSVFileReader(ReaderBase):
+class CsvReader(ReaderBase):
     def __init__(self, in_file, delimiter=",", **kwargs):
         super().__init__(**kwargs)
         self.in_file = in_file

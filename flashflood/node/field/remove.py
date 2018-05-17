@@ -41,3 +41,21 @@ class RemoveFields(FuncNode):
         super().merge_fields()
         for k in self.keys:
             self._out_edge.fields.delete("key", k)
+
+
+def retain(keys, row):
+    new_row = {}
+    for k in keys:
+        new_row[k] = row[k]
+    return new_row
+
+
+class RetainFields(FuncNode):
+    def __init__(self, keys, **kwargs):
+        super().__init__(functools.partial(retain, keys), **kwargs)
+        self.keys = keys
+
+    def merge_fields(self):
+        for k in self.keys:
+            self._out_edge.fields.add(self._in_edge.fields.find("key", k))
+        self._out_edge.fields.merge(self.fields)

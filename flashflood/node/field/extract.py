@@ -25,6 +25,7 @@ def extract(key, attrs, in_place, default, row):
     return new_row
 
 
+# TODO: rename to Unnest
 class Extract(FuncNode):
     def __init__(self, key, attrs, in_place=False, default=None, **kwargs):
         super().__init__(
