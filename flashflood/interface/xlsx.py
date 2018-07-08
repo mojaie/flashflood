@@ -45,23 +45,23 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
     buf = io.BytesIO()
     wb = Workbook(buf, opts["in_memory"])
     text_format = wb.add_format(opts["text_align"])
-    for table in data["tables"]:
-        sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", table["name"])
+    for content in data["contents"]:
+        sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", content["name"])
         sheet = wb.add_worksheet(sheet_name)
         # TODO: appropriate row height
-        struct = LOD(table["fields"]).find("key", "structure")
+        struct = LOD(content["fields"]).find("key", "structure")
         if struct is not None and struct["visible"]:
             sheet.set_default_row(opts["struct_row_height"])
         else:
             sheet.set_default_row(opts["default_row_height"])
         sheet.set_row(0, opts["header_row_height"])
         i = 0
-        for col in table["fields"]:
+        for col in content["fields"]:
             if not col["visible"]:
                 continue
             sheet.write(0, i, col["name"], text_format)
             col_width = [opts["default_col_width"]]
-            for j, row in enumerate(table["records"]):
+            for j, row in enumerate(content["records"]):
                 if col["key"] == "structure":  # Chemical structure SVG field
                     mol = Compound(json.loads(row["__moljson"]))
                     mpl = Matplotlib(mol)
