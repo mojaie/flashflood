@@ -11,7 +11,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="Flashflood",
-    version="0.12.0",
+    version="0.13.0",
     description="HTTP API server builder for chemical database workflow",
     long_description=long_description,
     url="https://github.com/mojaie/flashflood",
@@ -30,7 +30,7 @@ setup(
     ],
     keywords="drug-discovery cheminformatics api-server workflow",
     packages=find_packages(exclude=["flashflood.test*"]),
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     install_requires=[
         "chorus", "tornado", "xlsxwriter"
     ]
