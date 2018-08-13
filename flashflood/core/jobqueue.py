@@ -13,31 +13,21 @@ from tornado.queues import Queue
 class JobQueue(object):
     def __init__(self):
         self.queue = Queue(20)
-        self.store = []
-        self.task_lifetime = 86400 * 7  # Time(sec)
+        self.alive = {}
         self._dispatcher()
-
-    def __len__(self):
-        return len(self.store)
 
     @gen.coroutine
     def put(self, task, now=time.time()):
         """ Put a job to the queue """
-        self.store.append(task)
-        # remove expired data
-        alive = []
-        for task in self.store:
-            if task.creation_time + self.task_lifetime > now:
-                alive.append(task)
-        self.store = alive
+        self.alive[task.id] = task
         task.on_submit()
         yield self.queue.put(task)
 
     def get(self, id_):
-        for task in self.store:
-            if task.id == id_:
-                return task
-        raise ValueError('Task {} not found'.format(id_[:8]))
+        try:
+            return self.alive[id_]
+        except KeyError:
+            raise ValueError('Task {} not found'.format(id_))
 
     def abort(self, id_):
         task = self.get(id_)
@@ -53,8 +43,7 @@ class JobQueue(object):
             if task.status == "cancelled":
                 continue
             yield task.run()
+            del self.alive[task.id]
 
     def tasks_iter(self):
-        for task in self.store:
-            expires = task.creation_time + self.task_lifetime
-            yield task, expires
+        return self.alive.values()
