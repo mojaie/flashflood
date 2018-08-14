@@ -11,7 +11,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="Flashflood",
-    version="0.13.0",
+    version="0.13.1",
     description="HTTP API server builder for chemical database workflow",
     long_description=long_description,
     url="https://github.com/mojaie/flashflood",
