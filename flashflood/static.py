@@ -1,11 +1,18 @@
 
 import collections
-
+import json
+import os.path
 from tornado import process
 from chorus import molutil, wclogp
 from chorus.draw.svg import mol_to_svg
 
 from flashflood.lod import ListOfDict
+
+# Load config
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, "../config.json"), "rt") as f:
+    conf = json.load(f)
+VERSION = conf["setuppy"]["version"]
 
 JOB_RESULT_SCHEMA = "https://mojaie.github.io/flashflood/_static/specs/job_result_v1.0.json"
 

@@ -47,15 +47,16 @@ class TestJobQueue(AsyncTestCase):
         jq = JobQueue()
         task1 = Task(EagerNode())
         task2 = Task(EagerNode())
-        runner3 = Task(EagerNode())
+        task3 = Task(EagerNode())
         yield jq.put(task1)
         yield jq.put(task2)
-        runner3.creation_time = time.time() - jq.task_lifetime - 100
-        yield jq.put(runner3)
-        self.assertEqual(len(jq.store), 2)
-        self.assertEqual(jq.get(task2.id).id, task2.id)
+        yield jq.put(task3)
+        self.assertEqual(len(jq.alive), 3)
         with self.assertRaises(ValueError):
             jq.get("invalidKey")
+        while task3.status != "done":
+            yield gen.sleep(0.01)
+        self.assertEqual(len(jq.alive), 0)
 
     @gen_test
     def test_queue(self):
@@ -75,7 +76,7 @@ class TestJobQueue(AsyncTestCase):
         jq.abort(task2.id)
         while task2.status != "aborted":
             yield gen.sleep(0.01)
-        self.assertEqual(len(jq.store), 2)
+        self.assertEqual(len(jq.alive), 0)
 
 
 if __name__ == '__main__':

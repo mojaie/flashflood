@@ -1,37 +1,31 @@
 
+import json
+
 from codecs import open
 from os import path
 from setuptools import setup, find_packages
 
 
 here = path.abspath(path.dirname(__file__))
+
+with open(path.join(here, "config.json"), "rt") as f:
+    conf = json.load(f)
+
+# Generate meta.yaml
+metayaml = conf["metayaml"]
+metayaml["package"]["version"] = conf["setuppy"]["version"]
+metayaml["source"]["git_rev"] = conf["setuppy"]["version"]
+metayaml["about"]["home"] = conf["setuppy"]["url"]
+metayaml["about"]["license"] = conf["setuppy"]["license"]
+
+with open(path.join(here, "./conda-recipe/meta.yaml"), "wt") as f:
+    json.dump(metayaml, f)
+
+# setup
+setup_dict = conf["setuppy"]
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
-    long_description = f.read()
+    setup_dict["long_description"] = f.read()
 
+setup_dict["packages"] = find_packages(exclude=["flashflood.test*"])
 
-setup(
-    name="Flashflood",
-    version="0.13.1",
-    description="HTTP API server builder for chemical database workflow",
-    long_description=long_description,
-    url="https://github.com/mojaie/flashflood",
-    author="Seiji Matsuoka",
-    author_email="mojaie@aol.com",
-    license="MIT",
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering :: Chemistry",
-        "Topic :: Scientific/Engineering :: Bio-Informatics",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6"
-    ],
-    keywords="drug-discovery cheminformatics api-server workflow",
-    packages=find_packages(exclude=["flashflood.test*"]),
-    python_requires=">=3.6",
-    install_requires=[
-        "chorus", "tornado", "xlsxwriter"
-    ]
-)
+setup(**setup_dict)
