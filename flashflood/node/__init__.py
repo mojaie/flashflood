@@ -49,6 +49,7 @@ from flashflood.node.transform.join import LeftJoin
 from flashflood.node.transform.stack import Stack
 from flashflood.node.transform.unpack import Unpack
 from flashflood.node.transform.unstack import Unstack
+from flashflood.node.transform.zip import Zip
 
 from flashflood.node.writer.container import ContainerWriter
 from flashflood.node.writer.csv import CsvWriter
