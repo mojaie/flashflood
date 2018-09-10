@@ -33,18 +33,18 @@ class AsyncHttpBatchRequest(AsyncNode):
             self._out_edge.fields.delete("key", self.old_key)
 
     @gen.coroutine
-    def async_loop(self, edge):
+    def async_loop(self):
         while 1:
-            in_ = yield edge.get()
+            in_ = yield self._in_edge.get()
             yield self._out_edge.put(self.process_record(in_))
             yield gen.sleep(self.fetch_interval)
 
     @gen.coroutine
-    def asynchronizer(self, edge, on_finish, on_abort):
-        if self.edge_type(edge) == "IterEdge":
-            rcds = edge.records
-        elif self.edge_type(edge) == "FuncEdge":
-            rcds = map(edge.func, edge.records)
+    def asynchronizer(self, on_finish, on_abort):
+        if self.edge_type(self._in_edge) == "IterEdge":
+            rcds = self._in_edge.records
+        elif self.edge_type(self._in_edge) == "FuncEdge":
+            rcds = map(self._in_edge.func, self._in_edge.records)
         for in_ in rcds:
             if self._interrupted:
                 yield self._out_edge.abort()

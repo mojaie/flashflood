@@ -6,7 +6,7 @@
 
 import functools
 
-from flashflood.core.node import FuncNode
+from flashflood.core.node import FuncNode, AsyncNode
 
 
 def extract(key, attrs, in_place, default, row):
@@ -39,3 +39,20 @@ class Extract(FuncNode):
         super().merge_fields()
         if self.old_key is not None:
             self._out_edge.fields.delete("key", self.old_key)
+
+
+class AsyncExtract(AsyncNode):
+    def __init__(self, key, attrs, in_place=False, default=None, **kwargs):
+        super().__init__(**kwargs)
+        self.func = functools.partial(extract, key, attrs, in_place, default)
+        self.old_key = None
+        if in_place and key not in attrs:
+            self.old_key = key
+
+    def merge_fields(self):
+        super().merge_fields()
+        if self.old_key is not None:
+            self._out_edge.fields.delete("key", self.old_key)
+
+    def process_record(self, rcd):
+        return self.func(rcd)

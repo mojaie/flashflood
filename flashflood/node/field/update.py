@@ -6,7 +6,7 @@
 
 import functools
 
-from flashflood.core.node import FuncNode
+from flashflood.core.node import FuncNode, AsyncNode
 
 
 def rename(updates, row):
@@ -30,3 +30,20 @@ class UpdateFields(FuncNode):
             if field["key"] in self.updates:
                 field["key"] = self.updates[field["key"]]
         self._out_edge.fields.reduce()
+
+
+class AsyncUpdateFields(AsyncNode):
+    def __init__(self, updates, **kwargs):
+        super().__init__(**kwargs)
+        self.func = functools.partial(rename, updates)
+        self.updates = updates
+
+    def merge_fields(self):
+        super().merge_fields()
+        for field in self._out_edge.fields:
+            if field["key"] in self.updates:
+                field["key"] = self.updates[field["key"]]
+        self._out_edge.fields.reduce()
+
+    def process_record(self, rcd):
+        return self.func(rcd)

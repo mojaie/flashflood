@@ -15,14 +15,14 @@ from flashflood.node.control.replicate import Replicate
 from flashflood.node.field.concat import ConcatFields
 from flashflood.node.field.constant import ConstantField, AsyncConstantField
 from flashflood.node.field.extend import Extend, AsyncExtend
-from flashflood.node.field.extract import Extract
-from flashflood.node.field.httpbatchrequest import HttpBatchRequest
+from flashflood.node.field.extract import Extract, AsyncExtract
+from flashflood.node.field.httpbatchrequest import AsyncHttpBatchRequest
 from flashflood.node.field.number import Number, AsyncNumber
 from flashflood.node.field.remove import (
     RemoveField, RemoveFields, RetainFields
 )
 from flashflood.node.field.split import SplitField
-from flashflood.node.field.update import UpdateFields
+from flashflood.node.field.update import UpdateFields, AsyncUpdateFields
 
 from flashflood.node.monitor.count import CountRows, AsyncCountRows
 from flashflood.node.monitor.stdout import StdoutMonitor, AsyncStdoutMonitor
