@@ -16,6 +16,7 @@ from flashflood.node.field.concat import ConcatFields
 from flashflood.node.field.constant import ConstantField, AsyncConstantField
 from flashflood.node.field.extend import Extend, AsyncExtend
 from flashflood.node.field.extract import Extract
+from flashflood.node.field.httpbatchrequest import HttpBatchRequest
 from flashflood.node.field.number import Number, AsyncNumber
 from flashflood.node.field.remove import (
     RemoveField, RemoveFields, RetainFields
