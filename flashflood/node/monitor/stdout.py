@@ -14,10 +14,11 @@ class StdoutMonitor(IterNode):
         self.interval = interval
 
     def processor(self, rcds):
-        for i, r in enumerate(rcds):
+        for i, rcd in enumerate(rcds):
             if not i % self.interval:
-                print("{}: {} rows processed".format(self.name, i))
-            yield r
+                print(rcd)
+                print(f"{self.name}: {i} rows processed")
+            yield rcd
 
 
 class AsyncStdoutMonitor(AsyncNode):
@@ -29,6 +30,7 @@ class AsyncStdoutMonitor(AsyncNode):
 
     def process_record(self, rcd):
         if not self.count % self.interval:
-            print("{}: {} rows processed".format(self.name, self.count))
+            print(rcd)
+            print(f"{self.name}: {self.count} rows processed")
         self.count += 1
         return rcd
