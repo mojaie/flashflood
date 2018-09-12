@@ -2,19 +2,19 @@
 Flashflood Documentation
 ============================
 
-Flashflood is a HTTP API server builder for chemical data analysis. Flashflood includes DAG workflow assistance for parallel processing of chemical structure, chemical properties, biochemical activity data. This enables to build web server which can be accessed by web application, Jupyter notebook and any other analysis platform via HTTP.
+Flashflood is a directed acyclic graph (DAG) workflow-based HTTP API server builder. Input data is processed according to the workflow definition (data processing nodes and dataflow edges) and then the result JSON (and other formats) will be broadcasted via HTTP. This offers instant database access API to users to share their results and analysis regardless of their programming langages and environments.
 
 
 Features
 ----------
 
-- RESTful HTTP API builder
-- DAG workflow for analysis and database construction
-- Parallel computation
-- Chemical database construction with SQLite3
-- Library search (text match, chemical properties, sub/super structure)
-- Chemical space network generation (MCS-DR, RDKit fingerprint and RDKit MCS)
-- Output and reporting (JSON, Excel, SDFile and SQLite)
+- HTTP API builder
+- Directed acyclic graph (DAG) workflow to process database records
+- Asynchronus workflow: you can get records processed so far from ongoing tasks
+- Multiprocess (parallel) record processing
+- Input from python list, SQLite table, text file (CSV-like) and SDFile.
+- Chemical structure input (by using Chorus)
+- Output to JSON, Excel, SDFile and SQLite
 
 
 Contents:
@@ -25,7 +25,6 @@ Contents:
 
    getting_started.rst
    build_workflow.rst
-   http/http.rst
    api/api.rst
 
 
@@ -33,8 +32,6 @@ License
 -------------
 
 `MIT license <http://opensource.org/licenses/MIT>`_
-
-Test datasets provided by `DrugBank <https://www.drugbank.ca/>`_  are permitted to use under `Creative Common’s by-nc 4.0 License <https://creativecommons.org/licenses/by-nc/4.0/legalcode>`_
 
 
 * :ref:`genindex`

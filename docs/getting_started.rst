@@ -7,6 +7,9 @@ Installation
 -------------
 
 
+.. warning:: As Flashflood is still in an experimental status, Public API and request-response format specification will be updated frequently. We highly recommend to clone latest master branch, which may be the most stable version, from GitHub.
+
+
 
 PyPI
 ^^^^^^
