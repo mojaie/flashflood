@@ -1,7 +1,7 @@
 {
   "setuppy": {
     "name": "Flashflood",
-    "version": "0.13.2",
+    "version": "0.14.0",
     "description": "HTTP API server builder for chemical database workflow",
     "url": "https://github.com/mojaie/flashflood",
     "author": "Seiji Matsuoka",
@@ -14,8 +14,8 @@
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7"
     ],
     "keywords": "drug-discovery cheminformatics api-server workflow",
     "python_requires": ">= 3.6",
