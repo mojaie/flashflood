@@ -2,13 +2,13 @@
 Flashflood
 ================
 
-Flashflood is a HTTP API server builder for chemical data analysis. Flashflood includes DAG workflow assistance for parallel processing of chemical structure, chemical properties, biochemical activity data. This enables to build web server which can be accessed by web application, Jupyter notebook and any other analysis platform via HTTP.
+Flashflood is a directed acyclic graph (DAG) workflow-based HTTP API server builder. Input data is processed according to the workflow definition (data processing nodes and dataflow edges) and then the result JSON (and other formats) will be broadcasted via HTTP. This offers instant database access API to users to share their results and analysis regardless of their programming langages and environments.
 
 
 Example
 ================
 
-Workflow samples are available at [flashflood-workspace-sample](https://github.com/mojaie/flashflood-workspace-sample)
+Workflow samples are available at [flashflood-workspace](https://github.com/mojaie/flashflood-workspace)
 
 ```py
     from tornado.ioloop import IOLoop
@@ -64,14 +64,14 @@ conda install --use-local flashflood
 Building workspace
 ---------------------
 
-see [flashflood-workspace-sample](https://github.com/mojaie/flashflood-workspace-sample)
+see [flashflood-workspace](https://github.com/mojaie/flashflood-workspace)
 
 
 
 Documentation
 -------------------
 
-https://mojaie.github.io/flashflood
+https://flashflood-docs.readthedocs.io/
 
 
 
