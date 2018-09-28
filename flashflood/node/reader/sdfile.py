@@ -35,9 +35,10 @@ class SDFileReaderBase(ReaderBase):
                 mol = molutil.make_Hs_implicit(mol)
             if self.recalc_coords:
                 calc2dcoords.calc2dcoords(mol)
-            row["__molobj"] = mol
             for op in self.sdf_options:
                 row[op] = mol.data.get(op, "")
+            mol.data.clear()
+            row["__molobj"] = mol
             yield row
 
 
