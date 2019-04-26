@@ -57,7 +57,7 @@ def json_to_xlsx(data, opts=EXPORT_OPTIONS):
         row_height = opts["default_row_height"]
     for content in data["contents"]:
         sheet_name = re.sub(r"[\[\]\:\*\?\/\\]", "_", content["name"])
-        sheet = wb.add_worksheet(sheet_name)
+        sheet = wb.add_worksheet(sheet_name[:30])
         sheet.set_default_row(row_height)
         sheet.set_row(0, opts["header_row_height"])
         i = 0
